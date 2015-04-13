@@ -146,7 +146,7 @@ private:
         return tests;
     }
 
-    void handleFailures()
+    void handleFailures() const
     {
         if(!_failures.empty) utWriteln("");
         foreach(failure; _failures)
@@ -158,7 +158,7 @@ private:
         if(!_failures.empty) utWriteln("");
     }
 
-    @property ulong numTestsRun() const pure
+    @property ulong numTestsRun() @safe const pure
     {
         return _testCases.map!(a => a.numTestsRun).reduce!((a, b) => a + b);
     }
@@ -194,7 +194,7 @@ private bool moduleUnitTester()
  * Creates tests cases from the given modules.
  * If testsToRun is empty, it means run all tests.
  */
-private TestCase[] createTestCases(in TestData[] testData, in string[] testsToRun = [])
+private TestCase[] createTestCases(in TestData[] testData, in string[] testsToRun = []) @safe
 {
     bool[TestCase] tests;
 
@@ -204,11 +204,11 @@ private TestCase[] createTestCases(in TestData[] testData, in string[] testsToRu
         tests[createTestCase(data)] = true;
     }
 
-    return tests.keys.sort!((a, b) => a.name < b.name).array;
+    return () @trusted { return tests.keys.sort!((a, b) => a.name < b.name).array; }();
 }
 
 
-private TestCase createTestCase(in TestData testData)
+private TestCase createTestCase(in TestData testData) @safe
 {
     auto testCase = new FunctionTestCase(testData);
 
@@ -240,7 +240,7 @@ private TestCase createTestCase(in TestData testData)
 }
 
 
-private bool isWantedTest(in TestData testData, in string[] testsToRun)
+private bool isWantedTest(in TestData testData, in string[] testsToRun) @safe pure
 {
     //hidden tests are not run by default, every other one is
     if(!testsToRun.length) return !testData.hidden;

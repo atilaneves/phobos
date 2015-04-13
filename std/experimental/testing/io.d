@@ -52,7 +52,7 @@ package void forceEscCodes() nothrow
 /**
  * Adds to the test cases output so far or immediately prints
  */
-package void addToOutput(ref string output, in string msg)
+package void addToOutput(ref string output, in string msg) @safe
 {
     if(_debugOutput)
     {
@@ -214,7 +214,7 @@ private:
     /**
      * Generate green coloured output on POSIX systems
      */
-    string green(in string msg) const
+    string green(in string msg) @safe pure const
     {
         return escCode("green") ~ msg ~ escCode("cancel");
     }
@@ -222,7 +222,7 @@ private:
     /**
      * Generate red coloured output on POSIX systems
      */
-    string red(in string msg) const
+    string red(in string msg) @safe pure const
     {
         return escCode("red") ~ msg ~ escCode("cancel");
     }
@@ -230,7 +230,7 @@ private:
     /**
      * Generate yellow coloured output on POSIX systems
      */
-    string yellow(in string msg) const
+    string yellow(in string msg) @safe pure const
     {
         return escCode("yellow") ~ msg ~ escCode("cancel");
     }
@@ -238,7 +238,7 @@ private:
     /**
      * Send escape code to the console
      */
-    string escCode(in string code) const
+    string escCode(in string code) @safe pure const
     {
         return _useEscCodes ? _escCodes[code] : "";
     }

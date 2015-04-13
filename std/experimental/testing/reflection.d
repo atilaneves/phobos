@@ -31,7 +31,7 @@ import my.test.module;
 auto testData = allTestData!(my.test.module, "other.test.module");
 -----
 */
-TestData[] allTestData(MODULES...)()
+TestData[] allTestData(MODULES...)() @safe pure nothrow
 {
     TestData[] testData;
 
@@ -58,7 +58,7 @@ Params:
   module_ = The module to reflect on. Can be a symbol or a string.
 Returns: An array of TestData structs
 */
-TestData[] moduleTestData(alias module_)() pure nothrow {
+TestData[] moduleTestData(alias module_)() @safe pure nothrow {
 
     // Return a name for a unittest block. If no @Name UDA is found a name is
     // created automatically, else the UDA is used.

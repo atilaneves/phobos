@@ -16,7 +16,7 @@ class TestCase
     /**
     The name of the test case.
     */
-    string name() const pure nothrow
+    string name() @safe const pure nothrow
     {
         return this.classinfo.name;
     }
@@ -68,7 +68,7 @@ class TestCase
     /**
     The number of tests to run.
     */
-    ulong numTestsRun() const pure nothrow
+    ulong numTestsRun() @safe const pure nothrow
     {
         return 1;
     }
@@ -77,13 +77,13 @@ private:
     bool _failed;
     string _output;
 
-    void fail(in string msg)
+    void fail(in string msg) @safe
     {
         _failed = true;
         print(msg);
     }
 
-    void print(in string msg)
+    void print(in string msg) @safe
     {
         addToOutput(_output, msg);
     }
@@ -95,7 +95,7 @@ private:
  */
 class FunctionTestCase: TestCase
 {
-    this(immutable TestData data) pure nothrow
+    this(immutable TestData data) @safe pure nothrow
     {
         _name = data.name;
         _func = data.testFunction;
@@ -106,7 +106,7 @@ class FunctionTestCase: TestCase
         _func();
     }
 
-    override string name() const pure nothrow
+    override string name() @safe const pure nothrow
     {
         return _name;
     }
@@ -121,12 +121,12 @@ A test case that should fail.
  */
 class ShouldFailTestCase: TestCase
 {
-    this(TestCase testCase)
+    this(TestCase testCase) @safe pure nothrow
     {
         this.testCase = testCase;
     }
 
-    override string name() const pure nothrow
+    override string name() @safe const pure nothrow
     {
         return this.testCase.name;
     }
@@ -151,12 +151,12 @@ A test case that contains other test cases.
  */
 class CompositeTestCase: TestCase
 {
-    void add(TestCase t)
+    void add(TestCase t) @safe nothrow
     {
         _tests ~= t;
     }
 
-    void opOpAssign(string op : "~")(TestCase t)
+    void opOpAssign(string op : "~")(TestCase t) @safe nothrow
     {
         add(t);
     }
@@ -171,7 +171,7 @@ class CompositeTestCase: TestCase
         assert(false, "CompositeTestCase.test should never be called");
     }
 
-    override ulong numTestsRun() const pure nothrow
+    override ulong numTestsRun() @safe const pure nothrow
     {
         return _tests.length;
     }
