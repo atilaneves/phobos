@@ -1,0 +1,2039 @@
+<!DOCTYPE html>
+<html lang="en-US"><!-- 
+    | Copyright (c) 1999-2015 by Digital Mars
+    | All Rights Reserved Written by Walter Bright
+    | http://digitalmars.com
+	 -->
+	<head>
+		<meta charset="utf-8"/>
+		<meta name="keywords" content="D programming language"/>
+		<meta name="description" content="D Programming Language"/>
+		<title>Module std.traits - D Programming Language - Digital Mars</title>
+		<link rel="stylesheet" href="../../css/codemirror.css"/>
+		<link rel="stylesheet" href="../../css/style.css"/>
+		<link rel="stylesheet" href="../../css/print.css" media="print"/>
+		<link rel="stylesheet" href="../../css/cssmenu.css"/>
+		<link rel="stylesheet" href="../../css/ddox.css"/>
+		<link rel="stylesheet" href="../../prettify/prettify.css" type="text/css"/>
+		<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.2.0/css/font-awesome.min.css"/>
+		<link rel="shortcut icon" href="../../favicon.ico"/>
+		<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.7.2/jquery.min.js" type="text/javascript"></script>
+		<script type="text/javascript" src="../../prettify/prettify.js"></script>
+		<script type="text/javascript" src="../../js/ddox.js"></script>
+		<meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=0.1, maximum-scale=10.0"/>
+	</head>
+	<body id="Phobos Runtime Library" class="std">
+		<script type="text/javascript">
+document.body.className += ' have-javascript';
+		</script>
+		<div id="top">
+			<div id="header">
+				<a href="../../" class="logo">
+					<img id="logo" width="125" height="95" alt="D Logo" src="../../images/dlogo.svg"/>
+				</a>
+ &#x9;&#x9;
+				<span id="d-language-mobilehelper">
+					<a id="d-language" href="../../">D Programming Language</a>
+				</span>
+			</div>
+		</div>
+		<div id="navigation">
+			<div id="search-box">
+				<form method="get" action="http://google.com/search">
+					<input id="domains" type="hidden" name="domains" value="dlang.org"/>
+             
+					<input id="sourceid" type="hidden" name="sourceid" value="google-search"/>
+             
+					<span id="search-query">
+						<input id="q" name="q" placeholder="Search"/>
+						<input id="symbolSearch" style="display: none" type="text" name="symbolSearch" placeholder="API Search" onchange="performSymbolSearch(80);" onkeypress="this.onchange();" onpaste="this.onchange();" oninput="this.onchange();" autofocus/>
+					</span>
+					<span id="search-dropdown">
+						<select id="sitesearch" name="sitesearch" size="1">
+							<option value="dlang.org">Entire D Site</option>
+                     
+							<option selected="" value="dlang.org/library">Library Reference</option>
+                     
+							<option value="digitalmars.com/d/archives">Newsgroup Archives</option>
+						</select>
+					</span>
+					<span id="search-submit">
+						<button type="submit">
+							<i class="fa fa-search"></i>
+							<span>go</span>
+						</button>
+					</span>
+				</form>
+			</div>
+			<div id="cssmenu">
+				<ul>
+					<li>
+						<a href="../../index.html">
+							<span>D Lib 2.067.1</span>
+						</a>
+					</li>
+ &#x9;
+					<li>
+						<a href="../../library-prerelease/index.html">
+							<span>Prerelease Version</span>
+						</a>
+					</li>
+ &#x9;
+						<li class="has-sub">
+							<a href="#" class="package">std</a>
+							<ul class="tree-view">
+						<li class="tree-view collapsed">
+							<a href="#" class="package">algorithm</a>
+							<ul class="tree-view">
+						<li>
+							<a href="../std/algorithm/comparison.html" class=" module">comparison</a>
+						</li>
+						<li>
+							<a href="../std/algorithm/iteration.html" class=" module">iteration</a>
+						</li>
+						<li>
+							<a href="../std/algorithm/mutation.html" class=" module">mutation</a>
+						</li>
+						<li>
+							<a href="../std/algorithm/searching.html" class=" module">searching</a>
+						</li>
+						<li>
+							<a href="../std/algorithm/setops.html" class=" module">setops</a>
+						</li>
+						<li>
+							<a href="../std/algorithm/sorting.html" class=" module">sorting</a>
+						</li>
+							</ul>
+						</li>
+						<li class="tree-view collapsed">
+							<a href="#" class="package">container</a>
+							<ul class="tree-view">
+						<li>
+							<a href="../std/container/array.html" class=" module">array</a>
+						</li>
+						<li>
+							<a href="../std/container/binaryheap.html" class=" module">binaryheap</a>
+						</li>
+						<li>
+							<a href="../std/container/dlist.html" class=" module">dlist</a>
+						</li>
+						<li>
+							<a href="../std/container/rbtree.html" class=" module">rbtree</a>
+						</li>
+						<li>
+							<a href="../std/container/slist.html" class=" module">slist</a>
+						</li>
+						<li>
+							<a href="../std/container/util.html" class=" module">util</a>
+						</li>
+							</ul>
+						</li>
+						<li class="tree-view collapsed">
+							<a href="#" class="package">digest</a>
+							<ul class="tree-view">
+						<li>
+							<a href="../std/digest/crc.html" class=" module">crc</a>
+						</li>
+						<li>
+							<a href="../std/digest/digest.html" class=" module">digest</a>
+						</li>
+						<li>
+							<a href="../std/digest/hmac.html" class=" module">hmac</a>
+						</li>
+						<li>
+							<a href="../std/digest/md.html" class=" module">md</a>
+						</li>
+						<li>
+							<a href="../std/digest/ripemd.html" class=" module">ripemd</a>
+						</li>
+						<li>
+							<a href="../std/digest/sha.html" class=" module">sha</a>
+						</li>
+							</ul>
+						</li>
+						<li class="tree-view collapsed">
+							<a href="#" class="package">experimental</a>
+							<ul class="tree-view">
+						<li class="tree-view collapsed">
+							<a href="#" class="package">testing</a>
+							<ul class="tree-view">
+						<li>
+							<a href="../std/experimental/testing/attrs.html" class=" module">attrs</a>
+						</li>
+						<li>
+							<a href="../std/experimental/testing/gen_ut_main_mixin.html" class=" module">gen_ut_main_mixin</a>
+						</li>
+						<li>
+							<a href="../std/experimental/testing/io.html" class=" module">io</a>
+						</li>
+						<li>
+							<a href="../std/experimental/testing/options.html" class=" module">options</a>
+						</li>
+						<li>
+							<a href="../std/experimental/testing/reflection.html" class=" module">reflection</a>
+						</li>
+						<li>
+							<a href="../std/experimental/testing/runner.html" class=" module">runner</a>
+						</li>
+						<li>
+							<a href="../std/experimental/testing/should.html" class=" module">should</a>
+						</li>
+						<li>
+							<a href="../std/experimental/testing/testcase.html" class=" module">testcase</a>
+						</li>
+						<li>
+							<a href="../std/experimental/testing/testsuite.html" class=" module">testsuite</a>
+						</li>
+							</ul>
+						</li>
+						<li>
+							<a href="../std/experimental/gen_ut_main.html" class=" module">gen_ut_main</a>
+						</li>
+						<li>
+							<a href="../std/experimental/logger.html" class=" module">logger</a>
+						</li>
+						<li>
+							<a href="../std/experimental/testing.html" class=" module">testing</a>
+						</li>
+							</ul>
+						</li>
+						<li class="tree-view collapsed">
+							<a href="#" class="package">net</a>
+							<ul class="tree-view">
+						<li>
+							<a href="../std/net/curl.html" class=" module">curl</a>
+						</li>
+						<li>
+							<a href="../std/net/isemail.html" class=" module">isemail</a>
+						</li>
+							</ul>
+						</li>
+						<li class="tree-view collapsed">
+							<a href="#" class="package">range</a>
+							<ul class="tree-view">
+						<li>
+							<a href="../std/range/interfaces.html" class=" module">interfaces</a>
+						</li>
+						<li>
+							<a href="../std/range/primitives.html" class=" module">primitives</a>
+						</li>
+							</ul>
+						</li>
+						<li>
+							<a href="../std/algorithm.html" class=" module">algorithm</a>
+						</li>
+						<li>
+							<a href="../std/array.html" class=" module">array</a>
+						</li>
+						<li>
+							<a href="../std/ascii.html" class=" module">ascii</a>
+						</li>
+						<li>
+							<a href="../std/base64.html" class=" module">base64</a>
+						</li>
+						<li>
+							<a href="../std/bigint.html" class=" module">bigint</a>
+						</li>
+						<li>
+							<a href="../std/bitmanip.html" class=" module">bitmanip</a>
+						</li>
+						<li>
+							<a href="../std/compiler.html" class=" module">compiler</a>
+						</li>
+						<li>
+							<a href="../std/complex.html" class=" module">complex</a>
+						</li>
+						<li>
+							<a href="../std/concurrency.html" class=" module">concurrency</a>
+						</li>
+						<li>
+							<a href="../std/concurrencybase.html" class=" module">concurrencybase</a>
+						</li>
+						<li>
+							<a href="../std/container.html" class=" module">container</a>
+						</li>
+						<li>
+							<a href="../std/conv.html" class=" module">conv</a>
+						</li>
+						<li>
+							<a href="../std/csv.html" class=" module">csv</a>
+						</li>
+						<li>
+							<a href="../std/datetime.html" class=" module">datetime</a>
+						</li>
+						<li>
+							<a href="../std/demangle.html" class=" module">demangle</a>
+						</li>
+						<li>
+							<a href="../std/encoding.html" class=" module">encoding</a>
+						</li>
+						<li>
+							<a href="../std/exception.html" class=" module">exception</a>
+						</li>
+						<li>
+							<a href="../std/file.html" class=" module">file</a>
+						</li>
+						<li>
+							<a href="../std/functional.html" class=" module">functional</a>
+						</li>
+						<li>
+							<a href="../std/getopt.html" class=" module">getopt</a>
+						</li>
+						<li>
+							<a href="../std/json.html" class=" module">json</a>
+						</li>
+						<li>
+							<a href="../std/math.html" class=" module">math</a>
+						</li>
+						<li>
+							<a href="../std/mathspecial.html" class=" module">mathspecial</a>
+						</li>
+						<li>
+							<a href="../std/meta.html" class=" module">meta</a>
+						</li>
+						<li>
+							<a href="../std/mmfile.html" class=" module">mmfile</a>
+						</li>
+						<li>
+							<a href="../std/numeric.html" class=" module">numeric</a>
+						</li>
+						<li>
+							<a href="../std/outbuffer.html" class=" module">outbuffer</a>
+						</li>
+						<li>
+							<a href="../std/parallelism.html" class=" module">parallelism</a>
+						</li>
+						<li>
+							<a href="../std/path.html" class=" module">path</a>
+						</li>
+						<li>
+							<a href="../std/process.html" class=" module">process</a>
+						</li>
+						<li>
+							<a href="../std/random.html" class=" module">random</a>
+						</li>
+						<li>
+							<a href="../std/range.html" class=" module">range</a>
+						</li>
+						<li>
+							<a href="../std/regex.html" class=" module">regex</a>
+						</li>
+						<li>
+							<a href="../std/signals.html" class=" module">signals</a>
+						</li>
+						<li>
+							<a href="../std/socket.html" class=" module">socket</a>
+						</li>
+						<li>
+							<a href="../std/stdint.html" class=" module">stdint</a>
+						</li>
+						<li>
+							<a href="../std/stdio.html" class=" module">stdio</a>
+						</li>
+						<li>
+							<a href="../std/stdiobase.html" class=" module">stdiobase</a>
+						</li>
+						<li>
+							<a href="../std/string.html" class=" module">string</a>
+						</li>
+						<li>
+							<a href="../std/syserror.html" class=" module">syserror</a>
+						</li>
+						<li>
+							<a href="../std/system.html" class=" module">system</a>
+						</li>
+						<li>
+							<a href="../std/traits.html" class="selected module">traits</a>
+						</li>
+						<li>
+							<a href="../std/typecons.html" class=" module">typecons</a>
+						</li>
+						<li>
+							<a href="../std/typetuple.html" class=" module">typetuple</a>
+						</li>
+						<li>
+							<a href="../std/uni.html" class=" module">uni</a>
+						</li>
+						<li>
+							<a href="../std/uri.html" class=" module">uri</a>
+						</li>
+						<li>
+							<a href="../std/utf.html" class=" module">utf</a>
+						</li>
+						<li>
+							<a href="../std/uuid.html" class=" module">uuid</a>
+						</li>
+						<li>
+							<a href="../std/variant.html" class=" module">variant</a>
+						</li>
+						<li>
+							<a href="../std/xml.html" class=" module">xml</a>
+						</li>
+						<li>
+							<a href="../std/zip.html" class=" module">zip</a>
+						</li>
+						<li>
+							<a href="../std/zlib.html" class=" module">zlib</a>
+						</li>
+							</ul>
+						</li>
+						<li class="has-sub collapsed">
+							<a href="#" class="package">core</a>
+							<ul class="tree-view">
+						<li class="tree-view collapsed">
+							<a href="#" class="package">sync</a>
+							<ul class="tree-view">
+						<li>
+							<a href="../core/sync/barrier.html" class=" module">barrier</a>
+						</li>
+						<li>
+							<a href="../core/sync/condition.html" class=" module">condition</a>
+						</li>
+						<li>
+							<a href="../core/sync/config.html" class=" module">config</a>
+						</li>
+						<li>
+							<a href="../core/sync/exception.html" class=" module">exception</a>
+						</li>
+						<li>
+							<a href="../core/sync/mutex.html" class=" module">mutex</a>
+						</li>
+						<li>
+							<a href="../core/sync/rwmutex.html" class=" module">rwmutex</a>
+						</li>
+						<li>
+							<a href="../core/sync/semaphore.html" class=" module">semaphore</a>
+						</li>
+							</ul>
+						</li>
+						<li>
+							<a href="../core/atomic.html" class=" module">atomic</a>
+						</li>
+						<li>
+							<a href="../core/attribute.html" class=" module">attribute</a>
+						</li>
+						<li>
+							<a href="../core/bitop.html" class=" module">bitop</a>
+						</li>
+						<li>
+							<a href="../core/checkedint.html" class=" module">checkedint</a>
+						</li>
+						<li>
+							<a href="../core/cpuid.html" class=" module">cpuid</a>
+						</li>
+						<li>
+							<a href="../core/demangle.html" class=" module">demangle</a>
+						</li>
+						<li>
+							<a href="../core/exception.html" class=" module">exception</a>
+						</li>
+						<li>
+							<a href="../core/math.html" class=" module">math</a>
+						</li>
+						<li>
+							<a href="../core/memory.html" class=" module">memory</a>
+						</li>
+						<li>
+							<a href="../core/runtime.html" class=" module">runtime</a>
+						</li>
+						<li>
+							<a href="../core/simd.html" class=" module">simd</a>
+						</li>
+						<li>
+							<a href="../core/thread.html" class=" module">thread</a>
+						</li>
+						<li>
+							<a href="../core/time.html" class=" module">time</a>
+						</li>
+						<li>
+							<a href="../core/vararg.html" class=" module">vararg</a>
+						</li>
+							</ul>
+						</li>
+						<li class="has-sub collapsed">
+							<a href="#" class="package">etc</a>
+							<ul class="tree-view">
+						<li class="tree-view collapsed">
+							<a href="#" class="package">c</a>
+							<ul class="tree-view">
+						<li class="tree-view collapsed">
+							<a href="#" class="package">odbc</a>
+							<ul class="tree-view">
+						<li>
+							<a href="../etc/c/odbc/sql.html" class=" module">sql</a>
+						</li>
+						<li>
+							<a href="../etc/c/odbc/sqlext.html" class=" module">sqlext</a>
+						</li>
+						<li>
+							<a href="../etc/c/odbc/sqltypes.html" class=" module">sqltypes</a>
+						</li>
+						<li>
+							<a href="../etc/c/odbc/sqlucode.html" class=" module">sqlucode</a>
+						</li>
+							</ul>
+						</li>
+						<li>
+							<a href="../etc/c/curl.html" class=" module">curl</a>
+						</li>
+							</ul>
+						</li>
+							</ul>
+						</li>
+						<li>
+							<a href="../object.html" class=" module">object</a>
+						</li>
+					<li>
+						<a href="http://code.dlang.org">
+							<span>3rd Party Packages</span>
+						</a>
+					</li>
+				</ul>
+			</div>
+		</div>
+		<div style="position: absolute; height: 0;">
+			<ul id="symbolSearchResults" style="display: none"></ul>
+			<script type="application/javascript" src="../symbols.js"></script>
+			<script type="application/javascript">
+var symbolSearchRootDir = "../";
+$('#symbolSearchPane').show();
+			</script>
+		</div>
+		<div id="content" class="hyphenate">
+			<div id="tools">
+				<a href="https://github.com/D-Programming-Language/phobos/blob/master/std/traits.d" class="tip button">
+ View source code
+					<span>
+ Display the source code in std/traits.d from which this page was generated on
+ github.
+					</span>
+				</a>
+				<a href="https://github.com/D-Programming-Language/phobos/edit/master/std/traits.d" class="tip button">
+ Improve this page
+					<span>
+ Quickly fork, edit online, and submit a pull request for this page.
+ Requires a signed-in GitHub account. This works well for small changes.
+ If you'd like to make larger changes you may want to consider using
+ local clone.
+					</span>
+				</a>
+				<a href="http://wiki.dlang.org/DocComments/Phobos/std.traits" class="tip button">
+ Page wiki
+					<span>
+ View or edit the community-maintained wiki page associated with this page.
+					</span>
+				</a>
+			</div>
+			<h1>Module <code>std.traits</code></h1>
+			<p> Templates which extract information about types and symbols at compile time.
+</p>
+<section>
+<p> <script type="text/javascript">inhibitQuickIndex = 1;</script>
+</p>
+
+<p> <div class="quickindex">
+ <table class="book"><caption>
+ <tr><th scope="col">Category</th> <th scope="col">Templates</th></tr>
+ <tr><td>Symbol Name traits</td> <td><a href="../std/traits/fully_qualified_name.html"><code class="prettyprint lang-d">fullyQualifiedName</code></a>
+           <a href="../std/traits/module_name.html"><code class="prettyprint lang-d">moduleName</code></a>
+           <a href="../std/traits/package_name.html"><code class="prettyprint lang-d">packageName</code></a>
+ </td></tr>
+ <tr><td>Function traits</td> <td><a href="../std/traits/arity.html"><code class="prettyprint lang-d">arity</code></a>
+           <a href="../std/traits/function_attributes.html"><code class="prettyprint lang-d">functionAttributes</code></a>
+           <a href="../std/traits/function_linkage.html"><code class="prettyprint lang-d">functionLinkage</code></a>
+           <a href="../std/traits/function_type_of.html"><code class="prettyprint lang-d">FunctionTypeOf</code></a>
+           <a href="../std/traits/is_safe.html"><code class="prettyprint lang-d">isSafe</code></a>
+           <a href="../std/traits/is_unsafe.html"><code class="prettyprint lang-d">isUnsafe</code></a>
+           <a href="../std/traits/parameter_defaults.html"><code class="prettyprint lang-d">ParameterDefaults</code></a>
+           <a href="../std/traits/parameter_identifier_tuple.html"><code class="prettyprint lang-d">ParameterIdentifierTuple</code></a>
+           <a href="../std/traits/parameter_storage_class_tuple.html"><code class="prettyprint lang-d">ParameterStorageClassTuple</code></a>
+           <a href="../std/traits/parameters.html"><code class="prettyprint lang-d">Parameters</code></a>
+           <a href="../std/traits/return_type.html"><code class="prettyprint lang-d">ReturnType</code></a>
+           <a href="../std/traits/set_function_attributes.html"><code class="prettyprint lang-d">SetFunctionAttributes</code></a>
+           <a href="../std/traits/variadic_function_style.html"><code class="prettyprint lang-d">variadicFunctionStyle</code></a>
+ </td></tr>
+ <tr><td>Aggregate Type traits</td> <td><a href="../std/traits/base_classes_tuple.html"><code class="prettyprint lang-d">BaseClassesTuple</code></a>
+           <a href="../std/traits/base_type_tuple.html"><code class="prettyprint lang-d">BaseTypeTuple</code></a>
+           <a href="../std/traits/class_instance_alignment.html"><code class="prettyprint lang-d">classInstanceAlignment</code></a>
+           <a href="../std/traits/enum_members.html"><code class="prettyprint lang-d">EnumMembers</code></a>
+           <a href="../std/traits/field_name_tuple.html"><code class="prettyprint lang-d">FieldNameTuple</code></a>
+           <a href="../std/traits/fields.html"><code class="prettyprint lang-d">Fields</code></a>
+           <a href="../std/traits/has_aliasing.html"><code class="prettyprint lang-d">hasAliasing</code></a>
+           <a href="../std/traits/has_elaborate_assign.html"><code class="prettyprint lang-d">hasElaborateAssign</code></a>
+           <a href="../std/traits/has_elaborate_copy_constructor.html"><code class="prettyprint lang-d">hasElaborateCopyConstructor</code></a>
+           <a href="../std/traits/has_elaborate_destructor.html"><code class="prettyprint lang-d">hasElaborateDestructor</code></a>
+           <a href="../std/traits/has_indirections.html"><code class="prettyprint lang-d">hasIndirections</code></a>
+           <a href="../std/traits/has_member.html"><code class="prettyprint lang-d">hasMember</code></a>
+           <a href="../std/traits/has_nested.html"><code class="prettyprint lang-d">hasNested</code></a>
+           <a href="../std/traits/has_unshared_aliasing.html"><code class="prettyprint lang-d">hasUnsharedAliasing</code></a>
+           <a href="../std/traits/interfaces_tuple.html"><code class="prettyprint lang-d">InterfacesTuple</code></a>
+           <a href="../std/traits/is_nested.html"><code class="prettyprint lang-d">isNested</code></a>
+           <a href="../std/traits/member_functions_tuple.html"><code class="prettyprint lang-d">MemberFunctionsTuple</code></a>
+           <a href="../std/traits/representation_type_tuple.html"><code class="prettyprint lang-d">RepresentationTypeTuple</code></a>
+           <a href="../std/traits/template_args_of.html"><code class="prettyprint lang-d">TemplateArgsOf</code></a>
+           <a href="../std/traits/template_of.html"><code class="prettyprint lang-d">TemplateOf</code></a>
+           <a href="../std/traits/transitive_base_type_tuple.html"><code class="prettyprint lang-d">TransitiveBaseTypeTuple</code></a>
+ </td></tr>
+ <tr><td>Type Conversion</td> <td><a href="../std/traits/common_type.html"><code class="prettyprint lang-d">CommonType</code></a>
+           <a href="../std/traits/implicit_conversion_targets.html"><code class="prettyprint lang-d">ImplicitConversionTargets</code></a>
+           <a href="../std/traits/copy_type_qualifiers.html"><code class="prettyprint lang-d">CopyTypeQualifiers</code></a>
+           <a href="../std/traits/copy_constness.html"><code class="prettyprint lang-d">CopyConstness</code></a>
+           <a href="../std/traits/is_assignable.html"><code class="prettyprint lang-d">isAssignable</code></a>
+           <a href="../std/traits/is_covariant_with.html"><code class="prettyprint lang-d">isCovariantWith</code></a>
+           <a href="../std/traits/is_implicitly_convertible.html"><code class="prettyprint lang-d">isImplicitlyConvertible</code></a>
+ </td></tr>
+ <!--<tr><td>SomethingTypeOf</td> <td>BooleanTypeOf
+           IntegralTypeOf
+           FloatingPointTypeOf
+           NumericTypeOf
+           UnsignedTypeOf
+           SignedTypeOf
+           CharTypeOf
+           StaticArrayTypeOf
+           DynamicArrayTypeOf
+           ArrayTypeOf
+           StringTypeOf
+           AssocArrayTypeOf
+           BuiltinTypeOf
+ </td></tr>-->
+ <tr><td>Categories of types</td> <td><a href="../std/traits/is_aggregate_type.html"><code class="prettyprint lang-d">isAggregateType</code></a>
+           <a href="../std/traits/is_array.html"><code class="prettyprint lang-d">isArray</code></a>
+           <a href="../std/traits/is_associative_array.html"><code class="prettyprint lang-d">isAssociativeArray</code></a>
+           <a href="../std/traits/is_basic_type.html"><code class="prettyprint lang-d">isBasicType</code></a>
+           <a href="../std/traits/is_boolean.html"><code class="prettyprint lang-d">isBoolean</code></a>
+           <a href="../std/traits/is_builtin_type.html"><code class="prettyprint lang-d">isBuiltinType</code></a>
+           <a href="../std/traits/is_dynamic_array.html"><code class="prettyprint lang-d">isDynamicArray</code></a>
+           <a href="../std/traits/is_floating_point.html"><code class="prettyprint lang-d">isFloatingPoint</code></a>
+           <a href="../std/traits/is_integral.html"><code class="prettyprint lang-d">isIntegral</code></a>
+           <a href="../std/traits/is_narrow_string.html"><code class="prettyprint lang-d">isNarrowString</code></a>
+           <a href="../std/traits/is_autodecodable_string.html"><code class="prettyprint lang-d">isAutodecodableString</code></a>
+           <a href="../std/traits/is_numeric.html"><code class="prettyprint lang-d">isNumeric</code></a>
+           <a href="../std/traits/is_pointer.html"><code class="prettyprint lang-d">isPointer</code></a>
+           <a href="../std/traits/is_scalar_type.html"><code class="prettyprint lang-d">isScalarType</code></a>
+           <a href="../std/traits/is_signed.html"><code class="prettyprint lang-d">isSigned</code></a>
+           <a href="../std/traits/is_some_char.html"><code class="prettyprint lang-d">isSomeChar</code></a>
+           <a href="../std/traits/is_some_string.html"><code class="prettyprint lang-d">isSomeString</code></a>
+           <a href="../std/traits/is_static_array.html"><code class="prettyprint lang-d">isStaticArray</code></a>
+           <a href="../std/traits/is_unsigned.html"><code class="prettyprint lang-d">isUnsigned</code></a>
+ </td></tr>
+ <tr><td>Type behaviours</td> <td><a href="../std/traits/is_abstract_class.html"><code class="prettyprint lang-d">isAbstractClass</code></a>
+           <a href="../std/traits/is_abstract_function.html"><code class="prettyprint lang-d">isAbstractFunction</code></a>
+           <a href="../std/traits/is_callable.html"><code class="prettyprint lang-d">isCallable</code></a>
+           <a href="../std/traits/is_delegate.html"><code class="prettyprint lang-d">isDelegate</code></a>
+           <a href="../std/traits/is_expressions.html"><code class="prettyprint lang-d">isExpressions</code></a>
+           <a href="../std/traits/is_final_class.html"><code class="prettyprint lang-d">isFinalClass</code></a>
+           <a href="../std/traits/is_final_function.html"><code class="prettyprint lang-d">isFinalFunction</code></a>
+           <a href="../std/traits/is_function_pointer.html"><code class="prettyprint lang-d">isFunctionPointer</code></a>
+           <a href="../std/traits/is_instance_of.html"><code class="prettyprint lang-d">isInstanceOf</code></a>
+           <a href="../std/traits/is_iterable.html"><code class="prettyprint lang-d">isIterable</code></a>
+           <a href="../std/traits/is_mutable.html"><code class="prettyprint lang-d">isMutable</code></a>
+           <a href="../std/traits/is_some_function.html"><code class="prettyprint lang-d">isSomeFunction</code></a>
+           <a href="../std/traits/is_type_tuple.html"><code class="prettyprint lang-d">isTypeTuple</code></a>
+ </td></tr>
+ <tr><td>General Types</td> <td><a href="../std/traits/foreach_type.html"><code class="prettyprint lang-d">ForeachType</code></a>
+           <a href="../std/traits/key_type.html"><code class="prettyprint lang-d">KeyType</code></a>
+           <a href="../std/traits/largest.html"><code class="prettyprint lang-d">Largest</code></a>
+           <a href="../std/traits/most_negative.html"><code class="prettyprint lang-d">mostNegative</code></a>
+           <a href="../std/traits/original_type.html"><code class="prettyprint lang-d">OriginalType</code></a>
+           <a href="../std/traits/pointer_target.html"><code class="prettyprint lang-d">PointerTarget</code></a>
+           <a href="../std/traits/signed.html"><code class="prettyprint lang-d">Signed</code></a>
+           <a href="../std/traits/unqual.html"><code class="prettyprint lang-d">Unqual</code></a>
+           <a href="../std/traits/unsigned.html"><code class="prettyprint lang-d">Unsigned</code></a>
+           <a href="../std/traits/value_type.html"><code class="prettyprint lang-d">ValueType</code></a>
+ </td></tr>
+ <tr><td>Misc</td> <td><a href="../std/traits/mangled_name.html"><code class="prettyprint lang-d">mangledName</code></a>
+           <a href="../std/traits/select.html"><code class="prettyprint lang-d">Select</code></a>
+           <a href="../std/traits/select.html"><code class="prettyprint lang-d">select</code></a>
+ </td></tr>
+ <tr><td>User-Defined Attributes</td> <td><a href="../std/traits/has_uda.html"><code class="prettyprint lang-d">hasUDA</code></a>
+           <a href="../std/traits/get_ud_as.html"><code class="prettyprint lang-d">getUDAs</code></a>
+           <a href="../std/traits/get_symbols_byuda.html"><code class="prettyprint lang-d">getSymbolsByUDA</code></a>
+ </td></tr>
+ </caption></table>
+ </div>
+</p>
+</section>
+
+			<section></section>
+			<section>
+				<h2>Functions</h2>
+				<table>
+					<col class="caption"/>
+					<tr>
+						<th>Name</th>
+						<th>Description</th>
+					</tr>
+					<tr>
+						<td>
+							<a id="lvalueOf" class="public" href="../std/traits/lvalue_of.html">
+								<code>lvalueOf</code>
+							</a>
+						</td>
+						<td>Creates an lvalue or rvalue of type <code class="prettyprint lang-d">T</code> for <code class="prettyprint lang-d">typeof(...)</code> and
+<code class="prettyprint lang-d">_traits(compiles, ...)</code> purposes. No actual value is returned.
+</td>
+					</tr>
+					<tr>
+						<td>
+							<a id="rvalueOf" class="public" href="../std/traits/rvalue_of.html">
+								<code>rvalueOf</code>
+							</a>
+						</td>
+						<td>Creates an lvalue or rvalue of type <code class="prettyprint lang-d">T</code> for <code class="prettyprint lang-d">typeof(...)</code> and
+<code class="prettyprint lang-d">_traits(compiles, ...)</code> purposes. No actual value is returned.
+</td>
+					</tr>
+					<tr>
+						<td>
+							<a id="select" class="public" href="../std/traits/select.html">
+								<code>select</code>
+							</a>
+						</td>
+						<td>If <code class="prettyprint lang-d">cond</code> is <code class="prettyprint lang-d">true</code>, returns <code class="prettyprint lang-d"><a href="../std/traits/select.html#a"><code class="prettyprint lang-d">a</code></a></code> without evaluating <code class="prettyprint lang-d"><a href="../std/traits/select.html#b"><code class="prettyprint lang-d">b</code></a></code>. Otherwise, returns <code class="prettyprint lang-d"><a href="../std/traits/select.html#b"><code class="prettyprint lang-d">b</code></a></code> without evaluating <code class="prettyprint lang-d"><a href="../std/traits/select.html#a"><code class="prettyprint lang-d">a</code></a></code>.
+</td>
+					</tr>
+				</table>
+			</section>
+			<section>
+				<h2>Enums</h2>
+				<table>
+					<col class="caption"/>
+					<tr>
+						<th>Name</th>
+						<th>Description</th>
+					</tr>
+					<tr>
+						<td>
+							<a id="FunctionAttribute" class="public" href="../std/traits/function_attribute.html">
+								<code>FunctionAttribute</code>
+							</a>
+						</td>
+						<td>Returns the attributes attached to a function <code class="prettyprint lang-d">func</code>.
+</td>
+					</tr>
+					<tr>
+						<td>
+							<a id="ParameterStorageClass" class="public" href="../std/traits/parameter_storage_class.html">
+								<code>ParameterStorageClass</code>
+							</a>
+						</td>
+						<td>Returns a tuple consisting of the storage classes of the parameters of a
+function <code class="prettyprint lang-d">func</code>.
+</td>
+					</tr>
+					<tr>
+						<td>
+							<a id="Variadic" class="public" href="../std/traits/variadic.html">
+								<code>Variadic</code>
+							</a>
+						</td>
+						<td>Determines what kind of variadic parameters function has.
+</td>
+					</tr>
+				</table>
+			</section>
+			<section>
+				<h2>Templates</h2>
+				<table>
+					<col class="caption"/>
+					<tr>
+						<th>Name</th>
+						<th>Description</th>
+					</tr>
+					<tr>
+						<td>
+							<a id="areAllSafe" class="public" href="../std/traits/are_all_safe.html">
+								<code>areAllSafe</code>
+							</a>
+						</td>
+						<td><span class="red">Deprecated. It's badly named and provides redundant functionality. It was
+also badly broken prior to 2.060 (bug# 8362), so any code which uses it
+probably needs to be changed anyway. Please use <code class="prettyprint lang-d">allSatisfy(<a href="../std/traits/is_safe.html"><code class="prettyprint lang-d">isSafe</code></a>, ...)</code>
+instead. This will be removed in June 2015.</span>
+</td>
+					</tr>
+					<tr>
+						<td>
+							<a id="BaseClassesTuple" class="public" href="../std/traits/base_classes_tuple.html">
+								<code>BaseClassesTuple</code>
+							</a>
+						</td>
+						<td> Get a <span class="d_param">TypeTuple</span> of <i>all</i> base classes of this class,
+ in decreasing order. Interfaces are not included. <span class="d_param"><code class="prettyprint lang-d">BaseClassesTuple</code>!Object</span> yields the empty type tuple.
+</td>
+					</tr>
+					<tr>
+						<td>
+							<a id="BaseTypeTuple" class="public" href="../std/traits/base_type_tuple.html">
+								<code>BaseTypeTuple</code>
+							</a>
+						</td>
+						<td> Get a <span class="d_param">TypeTuple</span> of the base class and base interfaces of
+ this class or interface. <span class="d_param"><code class="prettyprint lang-d">BaseTypeTuple</code>!Object</span> returns
+ the empty type tuple.
+</td>
+					</tr>
+					<tr>
+						<td>
+							<a id="CommonType" class="public" href="../std/traits/common_type.html">
+								<code>CommonType</code>
+							</a>
+						</td>
+						<td>Get the type that all types can be implicitly converted to. Useful
+e.g. in figuring out an array type from a bunch of initializing
+values. Returns <span class="d_param">void</span> if passed an empty list, or if the
+types have no common type.
+</td>
+					</tr>
+					<tr>
+						<td>
+							<a id="FieldNameTuple" class="public" href="../std/traits/field_name_tuple.html">
+								<code>FieldNameTuple</code>
+							</a>
+						</td>
+						<td> Get as an expression tuple the names of the fields of a struct, class, or
+ union. This consists of the fields that take up memory space, excluding the
+ hidden fields like the virtual function table pointer or a context pointer
+ for nested types. If <code class="prettyprint lang-d">T</code> isn't a struct, class, or union returns an
+ expression tuple with an empty string.
+</td>
+					</tr>
+					<tr>
+						<td>
+							<a id="Fields" class="public" href="../std/traits/fields.html">
+								<code>Fields</code>
+							</a>
+						</td>
+						<td> Get as a tuple the types of the fields of a struct, class, or union.
+ This consists of the fields that take up memory space,
+ excluding the hidden fields like the virtual function
+ table pointer or a context pointer for nested types.
+ If <code class="prettyprint lang-d">T</code> isn't a struct, class, or union returns a tuple
+ with one element <code class="prettyprint lang-d">T</code>.
+</td>
+					</tr>
+					<tr>
+						<td>
+							<a id="fullyQualifiedName" class="public" href="../std/traits/fully_qualified_name.html">
+								<code>fullyQualifiedName</code>
+							</a>
+						</td>
+						<td> Get the fully qualified name of a type or a symbol. Can act as an intelligent type/symbol to string  converter.
+</td>
+					</tr>
+					<tr>
+						<td>
+							<a id="FunctionTypeOf" class="public" href="../std/traits/function_type_of.html">
+								<code>FunctionTypeOf</code>
+							</a>
+						</td>
+						<td>Get the function type from a callable <a href="../object.html"><code class="prettyprint lang-d">object</code></a> <code class="prettyprint lang-d">func</code>.
+</td>
+					</tr>
+					<tr>
+						<td>
+							<a id="hasAliasing" class="public" href="../std/traits/has_aliasing.html">
+								<code>hasAliasing</code>
+							</a>
+						</td>
+						<td>Returns <code class="prettyprint lang-d">true</code> if and only if <code class="prettyprint lang-d">T</code>'s representation includes at
+least one of the following: <ol><li>a raw pointer <code class="prettyprint lang-d">U*</code> and <code class="prettyprint lang-d">U</code>
+is not immutable;</li> <li>an array <code class="prettyprint lang-d">U[]</code> and <code class="prettyprint lang-d">U</code> is not
+immutable;</li> <li>a reference to a class or interface type <code class="prettyprint lang-d">C</code> and <code class="prettyprint lang-d">C</code> is
+not immutable.</li> <li>an associative array that is not immutable.</li>
+<li>a delegate.</li></ol>
+</td>
+					</tr>
+					<tr>
+						<td>
+							<a id="hasElaborateAssign" class="public" href="../std/traits/has_elaborate_assign.html">
+								<code>hasElaborateAssign</code>
+							</a>
+						</td>
+						<td>   True if <code class="prettyprint lang-d">S</code> or any type directly embedded in the representation of <code class="prettyprint lang-d">S</code>
+   defines an elaborate assignment. Elaborate assignments are introduced by
+   defining <code class="prettyprint lang-d">opAssign(typeof(this))</code> or <code class="prettyprint lang-d">opAssign(ref typeof(this))</code>
+   for a <code class="prettyprint lang-d">struct</code> or when there is a compiler-generated <code class="prettyprint lang-d">opAssign</code>.
+</td>
+					</tr>
+					<tr>
+						<td>
+							<a id="hasElaborateCopyConstructor" class="public" href="../std/traits/has_elaborate_copy_constructor.html">
+								<code>hasElaborateCopyConstructor</code>
+							</a>
+						</td>
+						<td> True if <code class="prettyprint lang-d">S</code> or any type embedded directly in the representation of <code class="prettyprint lang-d">S</code>
+ defines an elaborate copy constructor. Elaborate copy constructors are
+ introduced by defining <code class="prettyprint lang-d">this(this)</code> for a <code class="prettyprint lang-d">struct</code>.
+</td>
+					</tr>
+					<tr>
+						<td>
+							<a id="hasElaborateDestructor" class="public" href="../std/traits/has_elaborate_destructor.html">
+								<code>hasElaborateDestructor</code>
+							</a>
+						</td>
+						<td>   True if <code class="prettyprint lang-d">S</code> or any type directly embedded in the representation
+   of <code class="prettyprint lang-d">S</code> defines an elaborate destructor. Elaborate destructors
+   are introduced by defining <code class="prettyprint lang-d">~this()</code> for a <code class="prettyprint lang-d">struct</code>.
+</td>
+					</tr>
+					<tr>
+						<td>
+							<a id="hasIndirections" class="public" href="../std/traits/has_indirections.html">
+								<code>hasIndirections</code>
+							</a>
+						</td>
+						<td>Returns <code class="prettyprint lang-d">true</code> if and only if <code class="prettyprint lang-d">T</code>'s representation includes at
+least one of the following: <ol><li>a raw pointer <code class="prettyprint lang-d">U*</code>;</li> <li>an
+array <code class="prettyprint lang-d">U[]</code>;</li> <li>a reference to a class type <code class="prettyprint lang-d">C</code>.</li>
+<li>an associative array.</li> <li>a delegate.</li></ol>
+</td>
+					</tr>
+					<tr>
+						<td>
+							<a id="hasNested" class="public" href="../std/traits/has_nested.html">
+								<code>hasNested</code>
+							</a>
+						</td>
+						<td>Determines whether <code class="prettyprint lang-d">T</code> or any of its representation types
+have a context pointer.
+</td>
+					</tr>
+					<tr>
+						<td>
+							<a id="hasUDA" class="public" href="../std/traits/has_uda.html">
+								<code>hasUDA</code>
+							</a>
+						</td>
+						<td> Determine if a symbol has a given <a href="../attribute.html#uda">user-defined attribute</a>.
+</td>
+					</tr>
+					<tr>
+						<td>
+							<a id="hasUnsharedAliasing" class="public" href="../std/traits/has_unshared_aliasing.html">
+								<code>hasUnsharedAliasing</code>
+							</a>
+						</td>
+						<td>Returns <code class="prettyprint lang-d">true</code> if and only if <code class="prettyprint lang-d">T</code>'s representation includes at
+least one of the following: <ol><li>a raw pointer <code class="prettyprint lang-d">U*</code> and <code class="prettyprint lang-d">U</code>
+is not immutable or shared;</li> <li>an array <code class="prettyprint lang-d">U[]</code> and <code class="prettyprint lang-d">U</code> is not
+immutable or shared;</li> <li>a reference to a class type <code class="prettyprint lang-d">C</code> and
+<code class="prettyprint lang-d">C</code> is not immutable or shared.</li> <li>an associative array that is not
+immutable or shared.</li> <li>a delegate that is not shared.</li></ol>
+</td>
+					</tr>
+					<tr>
+						<td>
+							<a id="ImplicitConversionTargets" class="public" href="../std/traits/implicit_conversion_targets.html">
+								<code>ImplicitConversionTargets</code>
+							</a>
+						</td>
+						<td> Returns a tuple with all possible target types of an implicit
+ conversion of a value of type <span class="d_param">T</span>.
+</td>
+					</tr>
+					<tr>
+						<td>
+							<a id="InterfacesTuple" class="public" href="../std/traits/interfaces_tuple.html">
+								<code>InterfacesTuple</code>
+							</a>
+						</td>
+						<td> Get a <span class="d_param">TypeTuple</span> of <i>all</i> interfaces directly or
+ indirectly inherited by this class or interface. Interfaces do not
+ repeat if multiply implemented. <span class="d_param"><code class="prettyprint lang-d">InterfacesTuple</code>!Object</span>
+ yields the empty type tuple.
+</td>
+					</tr>
+					<tr>
+						<td>
+							<a id="isCallable" class="public" href="../std/traits/is_callable.html">
+								<code>isCallable</code>
+							</a>
+						</td>
+						<td>Detect whether <code class="prettyprint lang-d">T</code> is a callable <a href="../object.html"><code class="prettyprint lang-d">object</code></a>, which can be called with the
+function call operator <code class="prettyprint lang-d">(...)</code>.
+</td>
+					</tr>
+					<tr>
+						<td>
+							<a id="isCovariantWith" class="public" href="../std/traits/is_covariant_with.html">
+								<code>isCovariantWith</code>
+							</a>
+						</td>
+						<td>Determines whether the function type <code class="prettyprint lang-d">F</code> is covariant with <code class="prettyprint lang-d">G</code>, i.e.,
+functions of the type <code class="prettyprint lang-d">F</code> can override ones of the type <code class="prettyprint lang-d">G</code>.
+</td>
+					</tr>
+					<tr>
+						<td>
+							<a id="isDelegate" class="public" href="../std/traits/is_delegate.html">
+								<code>isDelegate</code>
+							</a>
+						</td>
+						<td>Detect whether symbol or type <code class="prettyprint lang-d">T</code> is a delegate.
+</td>
+					</tr>
+					<tr>
+						<td>
+							<a id="isExpressions" class="public" href="../std/traits/is_expressions.html">
+								<code>isExpressions</code>
+							</a>
+						</td>
+						<td> Check whether the tuple T is an expression tuple.
+ An expression tuple only contains expressions.
+</td>
+					</tr>
+					<tr>
+						<td>
+							<a id="isFunctionPointer" class="public" href="../std/traits/is_function_pointer.html">
+								<code>isFunctionPointer</code>
+							</a>
+						</td>
+						<td>Detect whether symbol or type <code class="prettyprint lang-d">T</code> is a function pointer.
+</td>
+					</tr>
+					<tr>
+						<td>
+							<a id="isSomeFunction" class="public" href="../std/traits/is_some_function.html">
+								<code>isSomeFunction</code>
+							</a>
+						</td>
+						<td>Detect whether symbol or type <code class="prettyprint lang-d">T</code> is a function, a function pointer or a delegate.
+</td>
+					</tr>
+					<tr>
+						<td>
+							<a id="isTypeTuple" class="public" href="../std/traits/is_type_tuple.html">
+								<code>isTypeTuple</code>
+							</a>
+						</td>
+						<td> Check whether the tuple <code class="prettyprint lang-d">T</code> is a type tuple.
+ A type tuple only contains types.
+</td>
+					</tr>
+					<tr>
+						<td>
+							<a id="Largest" class="public" href="../std/traits/largest.html">
+								<code>Largest</code>
+							</a>
+						</td>
+						<td>Returns the largest type, i.e. T such that T.sizeof is the largest.  If more
+than one type is of the same size, the leftmost argument of these in will be
+returned.
+</td>
+					</tr>
+					<tr>
+						<td>
+							<a id="mangledName" class="public" href="../std/traits/mangled_name.html">
+								<code>mangledName</code>
+							</a>
+						</td>
+						<td>Returns the mangled name of symbol or type <code class="prettyprint lang-d">sth</code>.
+</td>
+					</tr>
+					<tr>
+						<td>
+							<a id="MemberFunctionsTuple" class="public" href="../std/traits/member_functions_tuple.html">
+								<code>MemberFunctionsTuple</code>
+							</a>
+						</td>
+						<td>Returns a tuple of non-static functions with the name <code class="prettyprint lang-d">name</code> declared in the
+class or interface <code class="prettyprint lang-d">C</code>.  Covariant duplicates are shrunk into the most
+derived one.
+</td>
+					</tr>
+					<tr>
+						<td>
+							<a id="moduleName" class="public" href="../std/traits/module_name.html">
+								<code>moduleName</code>
+							</a>
+						</td>
+						<td> Get the module name (including package) for the given symbol.
+</td>
+					</tr>
+					<tr>
+						<td>
+							<a id="mostNegative" class="public" href="../std/traits/most_negative.html">
+								<code>mostNegative</code>
+							</a>
+						</td>
+						<td>Returns the most negative value of the numeric type T.
+</td>
+					</tr>
+					<tr>
+						<td>
+							<a id="packageName" class="public" href="../std/traits/package_name.html">
+								<code>packageName</code>
+							</a>
+						</td>
+						<td> Get the full package name for the given symbol.
+</td>
+					</tr>
+					<tr>
+						<td>
+							<a id="Parameters" class="public" href="../std/traits/parameters.html">
+								<code>Parameters</code>
+							</a>
+						</td>
+						<td>Get, as a tuple, the types of the parameters to a function, a pointer
+to function, a delegate, a struct with an <code class="prettyprint lang-d">opCall</code>, a pointer to a
+struct with an <code class="prettyprint lang-d">opCall</code>, or a class with an <code class="prettyprint lang-d">opCall</code>.
+</td>
+					</tr>
+					<tr>
+						<td>
+							<a id="RepresentationTypeTuple" class="public" href="../std/traits/representation_type_tuple.html">
+								<code>RepresentationTypeTuple</code>
+							</a>
+						</td>
+						<td>Get the primitive types of the fields of a struct or class, in
+topological order.
+</td>
+					</tr>
+					<tr>
+						<td>
+							<a id="ReturnType" class="public" href="../std/traits/return_type.html">
+								<code>ReturnType</code>
+							</a>
+						</td>
+						<td> Get the type of the return value from a function,
+ a pointer to function, a delegate, a struct
+ with an opCall, a pointer to a struct with an opCall,
+ or a class with an <code class="prettyprint lang-d">opCall</code>. Please note that <span class="d_keyword">ref</span>
+ is not part of a type, but the attribute of the function
+ (see template <a href="../std/traits/function_attributes.html"><code class="prettyprint lang-d">functionAttributes</code></a>).
+</td>
+					</tr>
+					<tr>
+						<td>
+							<a id="SetFunctionAttributes" class="public" href="../std/traits/set_function_attributes.html">
+								<code>SetFunctionAttributes</code>
+							</a>
+						</td>
+						<td> Constructs a new function or delegate type with the same basic signature
+ as the given one, but different attributes (including linkage).
+</td>
+					</tr>
+					<tr>
+						<td>
+							<a id="TransitiveBaseTypeTuple" class="public" href="../std/traits/transitive_base_type_tuple.html">
+								<code>TransitiveBaseTypeTuple</code>
+							</a>
+						</td>
+						<td> Get a <span class="d_param">TypeTuple</span> of <i>all</i> base classes of <span class="d_param">T</span>, in decreasing order, followed by <span class="d_param">T</span>'s
+ interfaces. <span class="d_param"><code class="prettyprint lang-d">TransitiveBaseTypeTuple</code>!Object</span> yields the
+ empty type tuple.
+</td>
+					</tr>
+					<tr>
+						<td>
+							<a id="Unqual" class="public" href="../std/traits/unqual.html">
+								<code>Unqual</code>
+							</a>
+						</td>
+						<td>Removes all qualifiers, if any, from type <code class="prettyprint lang-d">T</code>.
+</td>
+					</tr>
+				</table>
+			</section>
+			<section>
+				<h2>Enum values</h2>
+				<table>
+					<col class="caption"/>
+					<tr>
+						<th>Name</th>
+						<th>Type</th>
+						<th>Description</th>
+					</tr>
+					<tr>
+						<td>
+							<a id="arity" class="public" href="../std/traits/arity.html">
+								<code>arity</code>
+							</a>
+						</td>
+						<td>
+						</td>
+						<td>Returns the number of arguments of function <code class="prettyprint lang-d">func</code>.
+<code class="prettyprint lang-d">arity</code> is undefined for variadic functions.
+</td>
+					</tr>
+					<tr>
+						<td>
+							<a id="functionAttributes" class="public" href="../std/traits/function_attributes.html">
+								<code>functionAttributes</code>
+							</a>
+						</td>
+						<td>
+						</td>
+						<td>Returns the attributes attached to a function <code class="prettyprint lang-d">func</code>.
+</td>
+					</tr>
+					<tr>
+						<td>
+							<a id="functionLinkage" class="public" href="../std/traits/function_linkage.html">
+								<code>functionLinkage</code>
+							</a>
+						</td>
+						<td>
+						</td>
+						<td>Returns the calling convention of function as a string.
+</td>
+					</tr>
+					<tr>
+						<td>
+							<a id="hasMember" class="public" href="../std/traits/has_member.html">
+								<code>hasMember</code>
+							</a>
+						</td>
+						<td>
+						</td>
+						<td>   Yields <code class="prettyprint lang-d">true</code> if and only if <code class="prettyprint lang-d">T</code> is an aggregate that defines
+   a symbol called <code class="prettyprint lang-d">name</code>.
+</td>
+					</tr>
+					<tr>
+						<td>
+							<a id="isAbstractClass" class="public" href="../std/traits/is_abstract_class.html">
+								<code>isAbstractClass</code>
+							</a>
+						</td>
+						<td>
+						</td>
+						<td> Detect whether <code class="prettyprint lang-d">T</code> is a an abstract class.
+</td>
+					</tr>
+					<tr>
+						<td>
+							<a id="isAbstractFunction" class="public" href="../std/traits/is_abstract_function.html">
+								<code>isAbstractFunction</code>
+							</a>
+						</td>
+						<td>
+						</td>
+						<td> Detect whether <code class="prettyprint lang-d">T</code> is a an abstract function.
+</td>
+					</tr>
+					<tr>
+						<td>
+							<a id="isAggregateType" class="public" href="../std/traits/is_aggregate_type.html">
+								<code>isAggregateType</code>
+							</a>
+						</td>
+						<td>
+						</td>
+						<td> Detect whether type <code class="prettyprint lang-d">T</code> is an aggregate type.
+</td>
+					</tr>
+					<tr>
+						<td>
+							<a id="isArray" class="public" href="../std/traits/is_array.html">
+								<code>isArray</code>
+							</a>
+						</td>
+						<td>
+						</td>
+						<td> Detect whether type <code class="prettyprint lang-d">T</code> is an array (static or dynamic; for associative
+  arrays see <a href="../std/traits/is_associative_array.html"><code class="prettyprint lang-d">isAssociativeArray</code></a>).
+</td>
+					</tr>
+					<tr>
+						<td>
+							<a id="isAssignable" class="public" href="../std/traits/is_assignable.html">
+								<code>isAssignable</code>
+							</a>
+						</td>
+						<td>
+						</td>
+						<td>Returns <code class="prettyprint lang-d">true</code> iff a value of type <code class="prettyprint lang-d">Rhs</code> can be assigned to a variable of
+type <code class="prettyprint lang-d">Lhs</code>.
+</td>
+					</tr>
+					<tr>
+						<td>
+							<a id="isAssociativeArray" class="public" href="../std/traits/is_associative_array.html">
+								<code>isAssociativeArray</code>
+							</a>
+						</td>
+						<td>
+						</td>
+						<td> Detect whether <code class="prettyprint lang-d">T</code> is an associative array type
+</td>
+					</tr>
+					<tr>
+						<td>
+							<a id="isAutodecodableString" class="public" href="../std/traits/is_autodecodable_string.html">
+								<code>isAutodecodableString</code>
+							</a>
+						</td>
+						<td>
+						</td>
+						<td> Detect whether type <code class="prettyprint lang-d">T</code> is a string that will be autodecoded.
+</td>
+					</tr>
+					<tr>
+						<td>
+							<a id="isBasicType" class="public" href="../std/traits/is_basic_type.html">
+								<code>isBasicType</code>
+							</a>
+						</td>
+						<td>
+						</td>
+						<td>Detect whether <code class="prettyprint lang-d">T</code> is a basic type (scalar type or void).
+</td>
+					</tr>
+					<tr>
+						<td>
+							<a id="isBoolean" class="public" href="../std/traits/is_boolean.html">
+								<code>isBoolean</code>
+							</a>
+						</td>
+						<td>
+						</td>
+						<td> Detect whether <code class="prettyprint lang-d">T</code> is a built-in boolean type.
+</td>
+					</tr>
+					<tr>
+						<td>
+							<a id="isBuiltinType" class="public" href="../std/traits/is_builtin_type.html">
+								<code>isBuiltinType</code>
+							</a>
+						</td>
+						<td>
+						</td>
+						<td> Detect whether type <code class="prettyprint lang-d">T</code> is a builtin type.
+</td>
+					</tr>
+					<tr>
+						<td>
+							<a id="isDynamicArray" class="public" href="../std/traits/is_dynamic_array.html">
+								<code>isDynamicArray</code>
+							</a>
+						</td>
+						<td>
+						</td>
+						<td> Detect whether type <code class="prettyprint lang-d">T</code> is a dynamic array.
+</td>
+					</tr>
+					<tr>
+						<td>
+							<a id="isFinalClass" class="public" href="../std/traits/is_final_class.html">
+								<code>isFinalClass</code>
+							</a>
+						</td>
+						<td>
+						</td>
+						<td> Detect whether <code class="prettyprint lang-d">T</code> is a a final class.
+</td>
+					</tr>
+					<tr>
+						<td>
+							<a id="isFinalFunction" class="public" href="../std/traits/is_final_function.html">
+								<code>isFinalFunction</code>
+							</a>
+						</td>
+						<td>
+						</td>
+						<td> Detect whether <code class="prettyprint lang-d">T</code> is a a final function.
+</td>
+					</tr>
+					<tr>
+						<td>
+							<a id="isFloatingPoint" class="public" href="../std/traits/is_floating_point.html">
+								<code>isFloatingPoint</code>
+							</a>
+						</td>
+						<td>
+						</td>
+						<td> Detect whether <code class="prettyprint lang-d">T</code> is a built-in floating point type.
+</td>
+					</tr>
+					<tr>
+						<td>
+							<a id="isImplicitlyConvertible" class="public" href="../std/traits/is_implicitly_convertible.html">
+								<code>isImplicitlyConvertible</code>
+							</a>
+						</td>
+						<td>
+						</td>
+						<td>Is <code class="prettyprint lang-d">From</code> implicitly convertible to <code class="prettyprint lang-d">To</code>?
+</td>
+					</tr>
+					<tr>
+						<td>
+							<a id="isInstanceOf" class="public" href="../std/traits/is_instance_of.html">
+								<code>isInstanceOf</code>
+							</a>
+						</td>
+						<td>
+						</td>
+						<td> Returns true if T is an instance of the template S.
+</td>
+					</tr>
+					<tr>
+						<td>
+							<a id="isIntegral" class="public" href="../std/traits/is_integral.html">
+								<code>isIntegral</code>
+							</a>
+						</td>
+						<td>
+						</td>
+						<td> Detect whether <code class="prettyprint lang-d">T</code> is a built-in integral type. Types <code class="prettyprint lang-d">bool</code>,
+ <code class="prettyprint lang-d">char</code>, <code class="prettyprint lang-d">wchar</code>, and <code class="prettyprint lang-d">dchar</code> are not considered integral.
+</td>
+					</tr>
+					<tr>
+						<td>
+							<a id="isIterable" class="public" href="../std/traits/is_iterable.html">
+								<code>isIterable</code>
+							</a>
+						</td>
+						<td>
+						</td>
+						<td> Returns <code class="prettyprint lang-d">true</code> if T can be iterated over using a <code class="prettyprint lang-d">foreach</code> loop with
+ a single loop variable of automatically inferred type, regardless of how
+ the <code class="prettyprint lang-d">foreach</code> loop is implemented.  This includes ranges, structs/classes
+ that define <code class="prettyprint lang-d">opApply</code> with a single loop variable, and builtin dynamic,
+ static and associative arrays.
+</td>
+					</tr>
+					<tr>
+						<td>
+							<a id="isMutable" class="public" href="../std/traits/is_mutable.html">
+								<code>isMutable</code>
+							</a>
+						</td>
+						<td>
+						</td>
+						<td> Returns true if T is not const or immutable.  Note that <code class="prettyprint lang-d">isMutable</code> is true for
+ string, or immutable(char)[], because the 'head' is mutable.
+</td>
+					</tr>
+					<tr>
+						<td>
+							<a id="isNarrowString" class="public" href="../std/traits/is_narrow_string.html">
+								<code>isNarrowString</code>
+							</a>
+						</td>
+						<td>
+						</td>
+						<td> Detect whether type <code class="prettyprint lang-d">T</code> is a narrow string.
+</td>
+					</tr>
+					<tr>
+						<td>
+							<a id="isNested" class="public" href="../std/traits/is_nested.html">
+								<code>isNested</code>
+							</a>
+						</td>
+						<td>
+						</td>
+						<td>Determines whether <code class="prettyprint lang-d">T</code> has its own context pointer.
+<code class="prettyprint lang-d">T</code> must be either <code class="prettyprint lang-d">class</code>, <code class="prettyprint lang-d">struct</code>, or <code class="prettyprint lang-d">union</code>.
+</td>
+					</tr>
+					<tr>
+						<td>
+							<a id="isNestedFunction" class="public" href="../std/traits/is_nested_function.html">
+								<code>isNestedFunction</code>
+							</a>
+						</td>
+						<td>
+						</td>
+						<td>Determines whether function <code class="prettyprint lang-d">f</code> requires a context pointer.
+</td>
+					</tr>
+					<tr>
+						<td>
+							<a id="isNumeric" class="public" href="../std/traits/is_numeric.html">
+								<code>isNumeric</code>
+							</a>
+						</td>
+						<td>
+						</td>
+						<td>Detect whether <code class="prettyprint lang-d">T</code> is a built-in numeric type (integral or floating
+point).
+</td>
+					</tr>
+					<tr>
+						<td>
+							<a id="isPointer" class="public" href="../std/traits/is_pointer.html">
+								<code>isPointer</code>
+							</a>
+						</td>
+						<td>
+						</td>
+						<td> Detect whether type <code class="prettyprint lang-d">T</code> is a pointer.
+</td>
+					</tr>
+					<tr>
+						<td>
+							<a id="isSafe" class="public" href="../std/traits/is_safe.html">
+								<code>isSafe</code>
+							</a>
+						</td>
+						<td>
+						</td>
+						<td><code class="prettyprint lang-d">true</code> if <code class="prettyprint lang-d">func</code> is <code class="prettyprint lang-d">@safe</code> or <code class="prettyprint lang-d">@trusted</code>.
+</td>
+					</tr>
+					<tr>
+						<td>
+							<a id="isScalarType" class="public" href="../std/traits/is_scalar_type.html">
+								<code>isScalarType</code>
+							</a>
+						</td>
+						<td>
+						</td>
+						<td>Detect whether <code class="prettyprint lang-d">T</code> is a scalar type (a built-in numeric, character or boolean type).
+</td>
+					</tr>
+					<tr>
+						<td>
+							<a id="isSigned" class="public" href="../std/traits/is_signed.html">
+								<code>isSigned</code>
+							</a>
+						</td>
+						<td>
+						</td>
+						<td>Detect whether <code class="prettyprint lang-d">T</code> is a built-in signed numeric type.
+</td>
+					</tr>
+					<tr>
+						<td>
+							<a id="isSIMDVector" class="public" href="../std/traits/is_simd_vector.html">
+								<code>isSIMDVector</code>
+							</a>
+						</td>
+						<td>
+						</td>
+						<td> Detect whether type <code class="prettyprint lang-d">T</code> is a SIMD vector type.
+</td>
+					</tr>
+					<tr>
+						<td>
+							<a id="isSomeChar" class="public" href="../std/traits/is_some_char.html">
+								<code>isSomeChar</code>
+							</a>
+						</td>
+						<td>
+						</td>
+						<td>Detect whether <code class="prettyprint lang-d">T</code> is one of the built-in character types.
+</td>
+					</tr>
+					<tr>
+						<td>
+							<a id="isSomeString" class="public" href="../std/traits/is_some_string.html">
+								<code>isSomeString</code>
+							</a>
+						</td>
+						<td>
+						</td>
+						<td>Detect whether <code class="prettyprint lang-d">T</code> is one of the built-in string types.
+</td>
+					</tr>
+					<tr>
+						<td>
+							<a id="isStaticArray" class="public" href="../std/traits/is_static_array.html">
+								<code>isStaticArray</code>
+							</a>
+						</td>
+						<td>
+						</td>
+						<td> Detect whether type <code class="prettyprint lang-d">T</code> is a static array.
+</td>
+					</tr>
+					<tr>
+						<td>
+							<a id="isUnsafe" class="public" href="../std/traits/is_unsafe.html">
+								<code>isUnsafe</code>
+							</a>
+						</td>
+						<td>
+						</td>
+						<td><code class="prettyprint lang-d">true</code> if <code class="prettyprint lang-d">func</code> is <code class="prettyprint lang-d">@system</code>.
+</td>
+					</tr>
+					<tr>
+						<td>
+							<a id="isUnsigned" class="public" href="../std/traits/is_unsigned.html">
+								<code>isUnsigned</code>
+							</a>
+						</td>
+						<td>
+						</td>
+						<td>Detect whether <code class="prettyprint lang-d">T</code> is a built-in unsigned numeric type.
+</td>
+					</tr>
+					<tr>
+						<td>
+							<a id="variadicFunctionStyle" class="public" href="../std/traits/variadic_function_style.html">
+								<code>variadicFunctionStyle</code>
+							</a>
+						</td>
+						<td>
+						</td>
+						<td>Determines what kind of variadic parameters function has.
+</td>
+					</tr>
+				</table>
+			</section>
+			<section>
+				<h2>Aliases</h2>
+				<table>
+					<col class="caption"/>
+					<tr>
+						<th>Name</th>
+						<th>Type</th>
+						<th>Description</th>
+					</tr>
+					<tr>
+						<td>
+							<a id="classInstanceAlignment" class="public" href="../std/traits/class_instance_alignment.html">
+								<code>classInstanceAlignment</code>
+							</a>
+						</td>
+						<td>
+<code class="prettyprint lang-d">maxAlignment!(void*,typeof(T.tupleof))</code>
+						</td>
+						<td>Returns class instance alignment.
+</td>
+					</tr>
+					<tr>
+						<td>
+							<a id="ConstOf" class="public" href="../std/traits/const_of.html">
+								<code>ConstOf</code>
+							</a>
+						</td>
+						<td>
+<code class="prettyprint lang-d">const(T)</code>
+						</td>
+						<td>ditto.
+</td>
+					</tr>
+					<tr>
+						<td>
+							<a id="CopyConstness" class="public" href="../std/traits/copy_constness.html">
+								<code>CopyConstness</code>
+							</a>
+						</td>
+						<td>
+<code class="prettyprint lang-d">Unshared!(CopyTypeQualifiers!(FromType,ToType))</code>
+						</td>
+						<td>Returns the type of <code class="prettyprint lang-d">Target</code> with the "constness" of <code class="prettyprint lang-d">Source</code>. A type's constness
+refers to whether it is <code class="prettyprint lang-d">const</code>, <code class="prettyprint lang-d">immutable</code>, or <code class="prettyprint lang-d">inout</code>. If <code class="prettyprint lang-d">source</code> has no constness, the
+returned type will be the same as <code class="prettyprint lang-d">Target</code>.
+</td>
+					</tr>
+					<tr>
+						<td>
+							<a id="CopyTypeQualifiers" class="public" href="../std/traits/copy_type_qualifiers.html">
+								<code>CopyTypeQualifiers</code>
+							</a>
+						</td>
+						<td>
+<code class="prettyprint lang-d">ModifyTypePreservingTQ!(T,FromType)</code>
+						</td>
+						<td> Copies type qualifiers from <code class="prettyprint lang-d">FromType</code> to <code class="prettyprint lang-d">ToType</code>.
+</td>
+					</tr>
+					<tr>
+						<td>
+							<a id="EnumMembers" class="public" href="../std/traits/enum_members.html">
+								<code>EnumMembers</code>
+							</a>
+						</td>
+						<td>
+<code class="prettyprint lang-d">EnumSpecificMembers!(__traits(allMembers,E))</code>
+						</td>
+						<td>Retrieves the members of an enumerated type <code class="prettyprint lang-d">enum E</code>.
+</td>
+					</tr>
+					<tr>
+						<td>
+							<a id="FieldTypeTuple" class="public" href="../std/traits/field_type_tuple.html">
+								<code>FieldTypeTuple</code>
+							</a>
+						</td>
+						<td>
+						</td>
+						<td> Alternate name for <code class="prettyprint lang-d">FieldTypeTuple</code>, kept for legacy compatibility.
+</td>
+					</tr>
+					<tr>
+						<td>
+							<a id="ForeachType" class="public" href="../std/traits/foreach_type.html">
+								<code>ForeachType</code>
+							</a>
+						</td>
+						<td>
+<code class="prettyprint lang-d"><a href="../std/traits/return_type.html">ReturnType</a>!(typeof((inoutintx=0){foreach(elem;T.init){returnelem;}assert(0);}))</code>
+						</td>
+						<td>Returns the inferred type of the loop variable when a variable of type T
+is iterated over using a <code class="prettyprint lang-d">foreach</code> loop with a single loop variable and
+automatically inferred return type.  Note that this may not be the same as
+<code class="prettyprint lang-d">std.range.ElementType!Range</code> in the case of narrow strings, or if T
+has both opApply and a range interface.
+</td>
+					</tr>
+					<tr>
+						<td>
+							<a id="getSymbolsByUDA" class="public" href="../std/traits/get_symbols_byuda.html">
+								<code>getSymbolsByUDA</code>
+							</a>
+						</td>
+						<td>
+<code class="prettyprint lang-d">Filter!(hasSpecificUDA,TypeTuple!(symbol,staticMap!(StringToSymbol,__traits(allMembers,symbol))))</code>
+						</td>
+						<td> Gets all symbols within <code class="prettyprint lang-d">symbol</code> that have the given user-defined attribute.
+ This is not recursive; it will not search for symbols within symbols such as
+ nested structs or unions.
+</td>
+					</tr>
+					<tr>
+						<td>
+							<a id="getUDAs" class="public" href="../std/traits/get_ud_as.html">
+								<code>getUDAs</code>
+							</a>
+						</td>
+						<td>
+<code class="prettyprint lang-d">Filter!(isDesiredUDA,__traits(getAttributes,symbol))</code>
+						</td>
+						<td> Gets the <a href="../attribute.html#uda">user-defined attributes</a> of the given
+ type from the given symbol.
+</td>
+					</tr>
+					<tr>
+						<td>
+							<a id="ImmutableOf" class="public" href="../std/traits/immutable_of.html">
+								<code>ImmutableOf</code>
+							</a>
+						</td>
+						<td>
+<code class="prettyprint lang-d">immutable(T)</code>
+						</td>
+						<td>ditto.
+</td>
+					</tr>
+					<tr>
+						<td>
+							<a id="InoutOf" class="public" href="../std/traits/inout_of.html">
+								<code>InoutOf</code>
+							</a>
+						</td>
+						<td>
+<code class="prettyprint lang-d">inout(T)</code>
+						</td>
+						<td>Add specific qualifier to the given type T.
+</td>
+					</tr>
+					<tr>
+						<td>
+							<a id="isExpressionTuple" class="public" href="../std/traits/is_expression_tuple.html">
+								<code>isExpressionTuple</code>
+							</a>
+						</td>
+						<td>
+						</td>
+						<td> Alternate name for <a href="../std/traits/is_expressions.html"><code class="prettyprint lang-d">isExpressions</code></a>, kept for legacy compatibility.
+</td>
+					</tr>
+					<tr>
+						<td>
+							<a id="KeyType" class="public" href="../std/traits/key_type.html">
+								<code>KeyType</code>
+							</a>
+						</td>
+						<td>
+<code class="prettyprint lang-d">K</code>
+						</td>
+						<td> Get the Key type of an Associative Array.
+</td>
+					</tr>
+					<tr>
+						<td>
+							<a id="OriginalType" class="public" href="../std/traits/original_type.html">
+								<code>OriginalType</code>
+							</a>
+						</td>
+						<td>
+<code class="prettyprint lang-d">ModifyTypePreservingTQ!(Impl,T)</code>
+						</td>
+						<td> Strips off all <code class="prettyprint lang-d">enum</code>s from type <code class="prettyprint lang-d">T</code>.
+</td>
+					</tr>
+					<tr>
+						<td>
+							<a id="ParameterDefaults" class="public" href="../std/traits/parameter_defaults.html">
+								<code>ParameterDefaults</code>
+							</a>
+						</td>
+						<td>
+<code class="prettyprint lang-d">Impl!()</code>
+						</td>
+						<td>Get, as a tuple, the default value of the parameters to a function symbol.
+If a parameter doesn't have the default value, <code class="prettyprint lang-d">void</code> is returned instead.
+</td>
+					</tr>
+					<tr>
+						<td>
+							<a id="ParameterDefaultValueTuple" class="public" href="../std/traits/parameter_default_value_tuple.html">
+								<code>ParameterDefaultValueTuple</code>
+							</a>
+						</td>
+						<td>
+						</td>
+						<td> Alternate name for <a href="../std/traits/parameter_defaults.html"><code class="prettyprint lang-d">ParameterDefaults</code></a>, kept for legacy compatibility.
+</td>
+					</tr>
+					<tr>
+						<td>
+							<a id="ParameterIdentifierTuple" class="public" href="../std/traits/parameter_identifier_tuple.html">
+								<code>ParameterIdentifierTuple</code>
+							</a>
+						</td>
+						<td>
+<code class="prettyprint lang-d">Impl!()</code>
+						</td>
+						<td>Get, as a tuple, the identifiers of the parameters to a function symbol.
+</td>
+					</tr>
+					<tr>
+						<td>
+							<a id="ParameterStorageClassTuple" class="public" href="../std/traits/parameter_storage_class_tuple.html">
+								<code>ParameterStorageClassTuple</code>
+							</a>
+						</td>
+						<td>
+<code class="prettyprint lang-d">demangleNextParameter!margs</code>
+						</td>
+						<td>Returns a tuple consisting of the storage classes of the parameters of a
+function <code class="prettyprint lang-d">func</code>.
+</td>
+					</tr>
+					<tr>
+						<td>
+							<a id="ParameterTypeTuple" class="public" href="../std/traits/parameter_type_tuple.html">
+								<code>ParameterTypeTuple</code>
+							</a>
+						</td>
+						<td>
+						</td>
+						<td> Alternate name for <a href="../std/traits/parameters.html"><code class="prettyprint lang-d">Parameters</code></a>, kept for legacy compatibility.
+</td>
+					</tr>
+					<tr>
+						<td>
+							<a id="pointerTarget" class="public" href="../std/traits/pointer_target.html">
+								<code>pointerTarget</code>
+							</a>
+						</td>
+						<td>
+						</td>
+						<td>  <span class="red">Deprecated. Please use <a href="../std/traits/pointer_target.html"><code class="prettyprint lang-d">PointerTarget</code></a> instead. This will be
+        removed in June 2015.</span>
+</td>
+					</tr>
+					<tr>
+						<td>
+							<a id="PointerTarget" class="public" href="../std/traits/pointer_target.html">
+								<code>PointerTarget</code>
+							</a>
+						</td>
+						<td>
+<code class="prettyprint lang-d">T</code>
+						</td>
+						<td>Returns the target type of a pointer.
+</td>
+					</tr>
+					<tr>
+						<td>
+							<a id="Select" class="public" href="../std/traits/select.html">
+								<code>Select</code>
+							</a>
+						</td>
+						<td>
+<code class="prettyprint lang-d">T[!condition]</code>
+						</td>
+						<td>Aliases itself to <code class="prettyprint lang-d">T[0]</code> if the boolean <code class="prettyprint lang-d">condition</code> is <code class="prettyprint lang-d">true</code>
+and to <code class="prettyprint lang-d">T[1]</code> otherwise.
+</td>
+					</tr>
+					<tr>
+						<td>
+							<a id="SetFunctionAttributes" class="public" href="../std/traits/set_function_attributes.html">
+								<code>SetFunctionAttributes</code>
+							</a>
+						</td>
+						<td>
+<code class="prettyprint lang-d"><a href="../std/traits/function_type_of.html">FunctionTypeOf</a>!(SetFunctionAttributes!(T*,linkage,attrs))</code>
+						</td>
+						<td> Constructs a new function or delegate type with the same basic signature
+ as the given one, but different attributes (including linkage).
+</td>
+					</tr>
+					<tr>
+						<td>
+							<a id="SharedConstOf" class="public" href="../std/traits/shared_const_of.html">
+								<code>SharedConstOf</code>
+							</a>
+						</td>
+						<td>
+<code class="prettyprint lang-d">const(shared(T))</code>
+						</td>
+						<td>ditto.
+</td>
+					</tr>
+					<tr>
+						<td>
+							<a id="SharedInoutOf" class="public" href="../std/traits/shared_inout_of.html">
+								<code>SharedInoutOf</code>
+							</a>
+						</td>
+						<td>
+<code class="prettyprint lang-d">inout(shared(T))</code>
+						</td>
+						<td>ditto.
+</td>
+					</tr>
+					<tr>
+						<td>
+							<a id="SharedOf" class="public" href="../std/traits/shared_of.html">
+								<code>SharedOf</code>
+							</a>
+						</td>
+						<td>
+<code class="prettyprint lang-d">shared(T)</code>
+						</td>
+						<td>ditto.
+</td>
+					</tr>
+					<tr>
+						<td>
+							<a id="Signed" class="public" href="../std/traits/signed.html">
+								<code>Signed</code>
+							</a>
+						</td>
+						<td>
+<code class="prettyprint lang-d">ModifyTypePreservingTQ!(Impl,OriginalType!T)</code>
+						</td>
+						<td>Returns the corresponding signed type for T. T must be a numeric integral type,
+otherwise a compile-time error occurs.
+</td>
+					</tr>
+					<tr>
+						<td>
+							<a id="TemplateArgsOf" class="public" href="../std/traits/template_args_of.html">
+								<code>TemplateArgsOf</code>
+							</a>
+						</td>
+						<td>
+<code class="prettyprint lang-d">Args</code>
+						</td>
+						<td>Returns a <code class="prettyprint lang-d">TypeTuple</code> of the template arguments used to instantiate <code class="prettyprint lang-d">T</code>.
+</td>
+					</tr>
+					<tr>
+						<td>
+							<a id="TemplateOf" class="public" href="../std/traits/template_of.html">
+								<code>TemplateOf</code>
+							</a>
+						</td>
+						<td>
+<code class="prettyprint lang-d">Base</code>
+						</td>
+						<td>Returns an alias to the template that <code class="prettyprint lang-d">T</code> is an instance of.
+</td>
+					</tr>
+					<tr>
+						<td>
+							<a id="Unsigned" class="public" href="../std/traits/unsigned.html">
+								<code>Unsigned</code>
+							</a>
+						</td>
+						<td>
+<code class="prettyprint lang-d">ModifyTypePreservingTQ!(Impl,OriginalType!T)</code>
+						</td>
+						<td> Returns the corresponding unsigned type for T. T must be a numeric
+ integral type, otherwise a compile-time error occurs.
+</td>
+					</tr>
+					<tr>
+						<td>
+							<a id="ValueType" class="public" href="../std/traits/value_type.html">
+								<code>ValueType</code>
+							</a>
+						</td>
+						<td>
+<code class="prettyprint lang-d">V</code>
+						</td>
+						<td> Get the Value type of an Associative Array.
+</td>
+					</tr>
+				</table>
+			</section>
+			<section>
+				<h2>Authors</h2>
+<p><a href="http://digitalmars.com">Walter Bright</a>,
+            Tomasz Stachowiak (<code class="prettyprint lang-d"><a href="../std/traits/is_expressions.html"><code class="prettyprint lang-d">isExpressions</code></a></code>),
+            <a href="http://erdani.org">Andrei Alexandrescu</a>,
+            Shin Fujishiro,
+            <a href="http://octarineparrot.com">Robert Clipsham</a>,
+            <a href="http://klickverbot.at">David Nadlinger</a>,
+            Kenji Hara,
+            Shoichi Kato
+</p>
+
+			</section>
+			<section>
+				<h2>License</h2>
+<p><a href="http://www.boost.org/LICENSE_1_0.txt">Boost License 1.0</a>.
+</p>
+
+			</section>
+			<section>
+				<h2>Comments</h2>
+						<div id="disqus_thread"></div>
+						<script language="javascript">
+var disqus_shortname = 'vibe-d'; // required: replace example with your forum shortname
+var disqus_developer = 1;
+var disqus_identifier = "phobos-std.traits";
+
+
+/* * * DON'T EDIT BELOW THIS LINE * * */
+(function() {
+    var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+    dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+(document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+})();
+						</script>
+						<noscript>Please enable JavaScript to view the comments.</noscript>
+			</section>
+     
+			<div id="quickindex" class="quickindex"></div>
+		</div>
+		<div id="copyright">
+<p>Copyright Digital Mars 2005 - 2009.
+</p>
+
+ | Page generated by <a href="https://github.com/rejectedsoftware/ddox">ddox</a>.
+		</div>
+		<script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/1.7.2/jquery.min.js"></script>
+     
+		<script type="text/javascript">
+window.jQuery || document.write('<script src="../../js/jquery-1.7.2.min.js">\x3C/script>')
+		</script>
+     
+		<script type="text/javascript" src="../../js/codemirror-compressed.js"></script>
+     
+		<script type="text/javascript" src="../../js/run.js"></script>
+     
+		<script type="text/javascript" src="../../js/dlang.js"></script>
+		<script type="text/javascript" src="../../js/listanchors.js"></script>
+		<script type="text/javascript">
+jQuery(document).ready(listanchors);
+setupDdox();
+prettyPrint();
+		</script>
+	</body>
+</html>

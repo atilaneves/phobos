@@ -1,0 +1,1030 @@
+<!DOCTYPE html>
+<html lang="en-US"><!-- 
+    | Copyright (c) 1999-2015 by Digital Mars
+    | All Rights Reserved Written by Walter Bright
+    | http://digitalmars.com
+	 -->
+	<head>
+		<meta charset="utf-8"/>
+		<meta name="keywords" content="D programming language"/>
+		<meta name="description" content="D Programming Language"/>
+		<title>Module std.conv - D Programming Language - Digital Mars</title>
+		<link rel="stylesheet" href="../../css/codemirror.css"/>
+		<link rel="stylesheet" href="../../css/style.css"/>
+		<link rel="stylesheet" href="../../css/print.css" media="print"/>
+		<link rel="stylesheet" href="../../css/cssmenu.css"/>
+		<link rel="stylesheet" href="../../css/ddox.css"/>
+		<link rel="stylesheet" href="../../prettify/prettify.css" type="text/css"/>
+		<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.2.0/css/font-awesome.min.css"/>
+		<link rel="shortcut icon" href="../../favicon.ico"/>
+		<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.7.2/jquery.min.js" type="text/javascript"></script>
+		<script type="text/javascript" src="../../prettify/prettify.js"></script>
+		<script type="text/javascript" src="../../js/ddox.js"></script>
+		<meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=0.1, maximum-scale=10.0"/>
+	</head>
+	<body id="Phobos Runtime Library" class="std">
+		<script type="text/javascript">
+document.body.className += ' have-javascript';
+		</script>
+		<div id="top">
+			<div id="header">
+				<a href="../../" class="logo">
+					<img id="logo" width="125" height="95" alt="D Logo" src="../../images/dlogo.svg"/>
+				</a>
+ &#x9;&#x9;
+				<span id="d-language-mobilehelper">
+					<a id="d-language" href="../../">D Programming Language</a>
+				</span>
+			</div>
+		</div>
+		<div id="navigation">
+			<div id="search-box">
+				<form method="get" action="http://google.com/search">
+					<input id="domains" type="hidden" name="domains" value="dlang.org"/>
+             
+					<input id="sourceid" type="hidden" name="sourceid" value="google-search"/>
+             
+					<span id="search-query">
+						<input id="q" name="q" placeholder="Search"/>
+						<input id="symbolSearch" style="display: none" type="text" name="symbolSearch" placeholder="API Search" onchange="performSymbolSearch(80);" onkeypress="this.onchange();" onpaste="this.onchange();" oninput="this.onchange();" autofocus/>
+					</span>
+					<span id="search-dropdown">
+						<select id="sitesearch" name="sitesearch" size="1">
+							<option value="dlang.org">Entire D Site</option>
+                     
+							<option selected="" value="dlang.org/library">Library Reference</option>
+                     
+							<option value="digitalmars.com/d/archives">Newsgroup Archives</option>
+						</select>
+					</span>
+					<span id="search-submit">
+						<button type="submit">
+							<i class="fa fa-search"></i>
+							<span>go</span>
+						</button>
+					</span>
+				</form>
+			</div>
+			<div id="cssmenu">
+				<ul>
+					<li>
+						<a href="../../index.html">
+							<span>D Lib 2.067.1</span>
+						</a>
+					</li>
+ &#x9;
+					<li>
+						<a href="../../library-prerelease/index.html">
+							<span>Prerelease Version</span>
+						</a>
+					</li>
+ &#x9;
+						<li class="has-sub">
+							<a href="#" class="package">std</a>
+							<ul class="tree-view">
+						<li class="tree-view collapsed">
+							<a href="#" class="package">algorithm</a>
+							<ul class="tree-view">
+						<li>
+							<a href="../std/algorithm/comparison.html" class=" module">comparison</a>
+						</li>
+						<li>
+							<a href="../std/algorithm/iteration.html" class=" module">iteration</a>
+						</li>
+						<li>
+							<a href="../std/algorithm/mutation.html" class=" module">mutation</a>
+						</li>
+						<li>
+							<a href="../std/algorithm/searching.html" class=" module">searching</a>
+						</li>
+						<li>
+							<a href="../std/algorithm/setops.html" class=" module">setops</a>
+						</li>
+						<li>
+							<a href="../std/algorithm/sorting.html" class=" module">sorting</a>
+						</li>
+							</ul>
+						</li>
+						<li class="tree-view collapsed">
+							<a href="#" class="package">container</a>
+							<ul class="tree-view">
+						<li>
+							<a href="../std/container/array.html" class=" module">array</a>
+						</li>
+						<li>
+							<a href="../std/container/binaryheap.html" class=" module">binaryheap</a>
+						</li>
+						<li>
+							<a href="../std/container/dlist.html" class=" module">dlist</a>
+						</li>
+						<li>
+							<a href="../std/container/rbtree.html" class=" module">rbtree</a>
+						</li>
+						<li>
+							<a href="../std/container/slist.html" class=" module">slist</a>
+						</li>
+						<li>
+							<a href="../std/container/util.html" class=" module">util</a>
+						</li>
+							</ul>
+						</li>
+						<li class="tree-view collapsed">
+							<a href="#" class="package">digest</a>
+							<ul class="tree-view">
+						<li>
+							<a href="../std/digest/crc.html" class=" module">crc</a>
+						</li>
+						<li>
+							<a href="../std/digest/digest.html" class=" module">digest</a>
+						</li>
+						<li>
+							<a href="../std/digest/hmac.html" class=" module">hmac</a>
+						</li>
+						<li>
+							<a href="../std/digest/md.html" class=" module">md</a>
+						</li>
+						<li>
+							<a href="../std/digest/ripemd.html" class=" module">ripemd</a>
+						</li>
+						<li>
+							<a href="../std/digest/sha.html" class=" module">sha</a>
+						</li>
+							</ul>
+						</li>
+						<li class="tree-view collapsed">
+							<a href="#" class="package">experimental</a>
+							<ul class="tree-view">
+						<li class="tree-view collapsed">
+							<a href="#" class="package">testing</a>
+							<ul class="tree-view">
+						<li>
+							<a href="../std/experimental/testing/attrs.html" class=" module">attrs</a>
+						</li>
+						<li>
+							<a href="../std/experimental/testing/gen_ut_main_mixin.html" class=" module">gen_ut_main_mixin</a>
+						</li>
+						<li>
+							<a href="../std/experimental/testing/io.html" class=" module">io</a>
+						</li>
+						<li>
+							<a href="../std/experimental/testing/options.html" class=" module">options</a>
+						</li>
+						<li>
+							<a href="../std/experimental/testing/reflection.html" class=" module">reflection</a>
+						</li>
+						<li>
+							<a href="../std/experimental/testing/runner.html" class=" module">runner</a>
+						</li>
+						<li>
+							<a href="../std/experimental/testing/should.html" class=" module">should</a>
+						</li>
+						<li>
+							<a href="../std/experimental/testing/testcase.html" class=" module">testcase</a>
+						</li>
+						<li>
+							<a href="../std/experimental/testing/testsuite.html" class=" module">testsuite</a>
+						</li>
+							</ul>
+						</li>
+						<li>
+							<a href="../std/experimental/gen_ut_main.html" class=" module">gen_ut_main</a>
+						</li>
+						<li>
+							<a href="../std/experimental/logger.html" class=" module">logger</a>
+						</li>
+						<li>
+							<a href="../std/experimental/testing.html" class=" module">testing</a>
+						</li>
+							</ul>
+						</li>
+						<li class="tree-view collapsed">
+							<a href="#" class="package">net</a>
+							<ul class="tree-view">
+						<li>
+							<a href="../std/net/curl.html" class=" module">curl</a>
+						</li>
+						<li>
+							<a href="../std/net/isemail.html" class=" module">isemail</a>
+						</li>
+							</ul>
+						</li>
+						<li class="tree-view collapsed">
+							<a href="#" class="package">range</a>
+							<ul class="tree-view">
+						<li>
+							<a href="../std/range/interfaces.html" class=" module">interfaces</a>
+						</li>
+						<li>
+							<a href="../std/range/primitives.html" class=" module">primitives</a>
+						</li>
+							</ul>
+						</li>
+						<li>
+							<a href="../std/algorithm.html" class=" module">algorithm</a>
+						</li>
+						<li>
+							<a href="../std/array.html" class=" module">array</a>
+						</li>
+						<li>
+							<a href="../std/ascii.html" class=" module">ascii</a>
+						</li>
+						<li>
+							<a href="../std/base64.html" class=" module">base64</a>
+						</li>
+						<li>
+							<a href="../std/bigint.html" class=" module">bigint</a>
+						</li>
+						<li>
+							<a href="../std/bitmanip.html" class=" module">bitmanip</a>
+						</li>
+						<li>
+							<a href="../std/compiler.html" class=" module">compiler</a>
+						</li>
+						<li>
+							<a href="../std/complex.html" class=" module">complex</a>
+						</li>
+						<li>
+							<a href="../std/concurrency.html" class=" module">concurrency</a>
+						</li>
+						<li>
+							<a href="../std/concurrencybase.html" class=" module">concurrencybase</a>
+						</li>
+						<li>
+							<a href="../std/container.html" class=" module">container</a>
+						</li>
+						<li>
+							<a href="../std/conv.html" class="selected module">conv</a>
+						</li>
+						<li>
+							<a href="../std/csv.html" class=" module">csv</a>
+						</li>
+						<li>
+							<a href="../std/datetime.html" class=" module">datetime</a>
+						</li>
+						<li>
+							<a href="../std/demangle.html" class=" module">demangle</a>
+						</li>
+						<li>
+							<a href="../std/encoding.html" class=" module">encoding</a>
+						</li>
+						<li>
+							<a href="../std/exception.html" class=" module">exception</a>
+						</li>
+						<li>
+							<a href="../std/file.html" class=" module">file</a>
+						</li>
+						<li>
+							<a href="../std/functional.html" class=" module">functional</a>
+						</li>
+						<li>
+							<a href="../std/getopt.html" class=" module">getopt</a>
+						</li>
+						<li>
+							<a href="../std/json.html" class=" module">json</a>
+						</li>
+						<li>
+							<a href="../std/math.html" class=" module">math</a>
+						</li>
+						<li>
+							<a href="../std/mathspecial.html" class=" module">mathspecial</a>
+						</li>
+						<li>
+							<a href="../std/meta.html" class=" module">meta</a>
+						</li>
+						<li>
+							<a href="../std/mmfile.html" class=" module">mmfile</a>
+						</li>
+						<li>
+							<a href="../std/numeric.html" class=" module">numeric</a>
+						</li>
+						<li>
+							<a href="../std/outbuffer.html" class=" module">outbuffer</a>
+						</li>
+						<li>
+							<a href="../std/parallelism.html" class=" module">parallelism</a>
+						</li>
+						<li>
+							<a href="../std/path.html" class=" module">path</a>
+						</li>
+						<li>
+							<a href="../std/process.html" class=" module">process</a>
+						</li>
+						<li>
+							<a href="../std/random.html" class=" module">random</a>
+						</li>
+						<li>
+							<a href="../std/range.html" class=" module">range</a>
+						</li>
+						<li>
+							<a href="../std/regex.html" class=" module">regex</a>
+						</li>
+						<li>
+							<a href="../std/signals.html" class=" module">signals</a>
+						</li>
+						<li>
+							<a href="../std/socket.html" class=" module">socket</a>
+						</li>
+						<li>
+							<a href="../std/stdint.html" class=" module">stdint</a>
+						</li>
+						<li>
+							<a href="../std/stdio.html" class=" module">stdio</a>
+						</li>
+						<li>
+							<a href="../std/stdiobase.html" class=" module">stdiobase</a>
+						</li>
+						<li>
+							<a href="../std/string.html" class=" module">string</a>
+						</li>
+						<li>
+							<a href="../std/syserror.html" class=" module">syserror</a>
+						</li>
+						<li>
+							<a href="../std/system.html" class=" module">system</a>
+						</li>
+						<li>
+							<a href="../std/traits.html" class=" module">traits</a>
+						</li>
+						<li>
+							<a href="../std/typecons.html" class=" module">typecons</a>
+						</li>
+						<li>
+							<a href="../std/typetuple.html" class=" module">typetuple</a>
+						</li>
+						<li>
+							<a href="../std/uni.html" class=" module">uni</a>
+						</li>
+						<li>
+							<a href="../std/uri.html" class=" module">uri</a>
+						</li>
+						<li>
+							<a href="../std/utf.html" class=" module">utf</a>
+						</li>
+						<li>
+							<a href="../std/uuid.html" class=" module">uuid</a>
+						</li>
+						<li>
+							<a href="../std/variant.html" class=" module">variant</a>
+						</li>
+						<li>
+							<a href="../std/xml.html" class=" module">xml</a>
+						</li>
+						<li>
+							<a href="../std/zip.html" class=" module">zip</a>
+						</li>
+						<li>
+							<a href="../std/zlib.html" class=" module">zlib</a>
+						</li>
+							</ul>
+						</li>
+						<li class="has-sub collapsed">
+							<a href="#" class="package">core</a>
+							<ul class="tree-view">
+						<li class="tree-view collapsed">
+							<a href="#" class="package">sync</a>
+							<ul class="tree-view">
+						<li>
+							<a href="../core/sync/barrier.html" class=" module">barrier</a>
+						</li>
+						<li>
+							<a href="../core/sync/condition.html" class=" module">condition</a>
+						</li>
+						<li>
+							<a href="../core/sync/config.html" class=" module">config</a>
+						</li>
+						<li>
+							<a href="../core/sync/exception.html" class=" module">exception</a>
+						</li>
+						<li>
+							<a href="../core/sync/mutex.html" class=" module">mutex</a>
+						</li>
+						<li>
+							<a href="../core/sync/rwmutex.html" class=" module">rwmutex</a>
+						</li>
+						<li>
+							<a href="../core/sync/semaphore.html" class=" module">semaphore</a>
+						</li>
+							</ul>
+						</li>
+						<li>
+							<a href="../core/atomic.html" class=" module">atomic</a>
+						</li>
+						<li>
+							<a href="../core/attribute.html" class=" module">attribute</a>
+						</li>
+						<li>
+							<a href="../core/bitop.html" class=" module">bitop</a>
+						</li>
+						<li>
+							<a href="../core/checkedint.html" class=" module">checkedint</a>
+						</li>
+						<li>
+							<a href="../core/cpuid.html" class=" module">cpuid</a>
+						</li>
+						<li>
+							<a href="../core/demangle.html" class=" module">demangle</a>
+						</li>
+						<li>
+							<a href="../core/exception.html" class=" module">exception</a>
+						</li>
+						<li>
+							<a href="../core/math.html" class=" module">math</a>
+						</li>
+						<li>
+							<a href="../core/memory.html" class=" module">memory</a>
+						</li>
+						<li>
+							<a href="../core/runtime.html" class=" module">runtime</a>
+						</li>
+						<li>
+							<a href="../core/simd.html" class=" module">simd</a>
+						</li>
+						<li>
+							<a href="../core/thread.html" class=" module">thread</a>
+						</li>
+						<li>
+							<a href="../core/time.html" class=" module">time</a>
+						</li>
+						<li>
+							<a href="../core/vararg.html" class=" module">vararg</a>
+						</li>
+							</ul>
+						</li>
+						<li class="has-sub collapsed">
+							<a href="#" class="package">etc</a>
+							<ul class="tree-view">
+						<li class="tree-view collapsed">
+							<a href="#" class="package">c</a>
+							<ul class="tree-view">
+						<li class="tree-view collapsed">
+							<a href="#" class="package">odbc</a>
+							<ul class="tree-view">
+						<li>
+							<a href="../etc/c/odbc/sql.html" class=" module">sql</a>
+						</li>
+						<li>
+							<a href="../etc/c/odbc/sqlext.html" class=" module">sqlext</a>
+						</li>
+						<li>
+							<a href="../etc/c/odbc/sqltypes.html" class=" module">sqltypes</a>
+						</li>
+						<li>
+							<a href="../etc/c/odbc/sqlucode.html" class=" module">sqlucode</a>
+						</li>
+							</ul>
+						</li>
+						<li>
+							<a href="../etc/c/curl.html" class=" module">curl</a>
+						</li>
+							</ul>
+						</li>
+							</ul>
+						</li>
+						<li>
+							<a href="../object.html" class=" module">object</a>
+						</li>
+					<li>
+						<a href="http://code.dlang.org">
+							<span>3rd Party Packages</span>
+						</a>
+					</li>
+				</ul>
+			</div>
+		</div>
+		<div style="position: absolute; height: 0;">
+			<ul id="symbolSearchResults" style="display: none"></ul>
+			<script type="application/javascript" src="../symbols.js"></script>
+			<script type="application/javascript">
+var symbolSearchRootDir = "../";
+$('#symbolSearchPane').show();
+			</script>
+		</div>
+		<div id="content" class="hyphenate">
+			<div id="tools">
+				<a href="https://github.com/D-Programming-Language/phobos/blob/master/std/conv.d" class="tip button">
+ View source code
+					<span>
+ Display the source code in std/conv.d from which this page was generated on
+ github.
+					</span>
+				</a>
+				<a href="https://github.com/D-Programming-Language/phobos/edit/master/std/conv.d" class="tip button">
+ Improve this page
+					<span>
+ Quickly fork, edit online, and submit a pull request for this page.
+ Requires a signed-in GitHub account. This works well for small changes.
+ If you'd like to make larger changes you may want to consider using
+ local clone.
+					</span>
+				</a>
+				<a href="http://wiki.dlang.org/DocComments/Phobos/std.conv" class="tip button">
+ Page wiki
+					<span>
+ View or edit the community-maintained wiki page associated with this page.
+					</span>
+				</a>
+			</div>
+			<h1>Module <code>std.conv</code></h1>
+			<p>A one-stop shop for converting values from one type <a href="../std/conv/to.html"><code class="prettyprint lang-d">to</code></a> another.
+</p>
+<section></section>
+
+			<section></section>
+			<section>
+				<h2>Functions</h2>
+				<table>
+					<col class="caption"/>
+					<tr>
+						<th>Name</th>
+						<th>Description</th>
+					</tr>
+					<tr>
+						<td>
+							<a id="dtext" class="public" href="../std/conv/dtext.html">
+								<code>dtext</code>
+							</a>
+						</td>
+						<td> Convenience functions for converting any number and types of
+ arguments into text (the three character widths).
+</td>
+					</tr>
+					<tr>
+						<td>
+							<a id="emplace" class="public" href="../std/conv/emplace.html">
+								<code>emplace</code>
+							</a>
+						</td>
+						<td>Given a raw memory area <code class="prettyprint lang-d"><a href="../std/conv/emplace.html#chunk"><code class="prettyprint lang-d">chunk</code></a></code>, constructs an <a href="../object.html"><code class="prettyprint lang-d">object</code></a> of non-<code class="prettyprint lang-d">class</code> type <code class="prettyprint lang-d">T</code> at that address. The constructor is passed the
+arguments <code class="prettyprint lang-d"><a href="../std/conv/emplace.html#args"><code class="prettyprint lang-d">args</code></a></code>, if any. The <code class="prettyprint lang-d"><a href="../std/conv/emplace.html#chunk"><code class="prettyprint lang-d">chunk</code></a></code> must be as least as large
+as <code class="prettyprint lang-d">T</code> needs and should have an alignment multiple of <code class="prettyprint lang-d">T</code>'s
+alignment.
+</td>
+					</tr>
+					<tr>
+						<td>
+							<a id="emplace" class="public" href="../std/conv/emplace.html">
+								<code>emplace</code>
+							</a>
+						</td>
+						<td>Given a raw memory area <code class="prettyprint lang-d"><a href="../std/conv/emplace.html#chunk"><code class="prettyprint lang-d">chunk</code></a></code>, constructs an <a href="../object.html"><code class="prettyprint lang-d">object</code></a> of <code class="prettyprint lang-d">class</code>
+type <code class="prettyprint lang-d">T</code> at that address. The constructor is passed the arguments
+<code class="prettyprint lang-d">Args</code>. The <code class="prettyprint lang-d"><a href="../std/conv/emplace.html#chunk"><code class="prettyprint lang-d">chunk</code></a></code> must be as least as large as <code class="prettyprint lang-d">T</code> needs
+and should have an alignment multiple of <code class="prettyprint lang-d">T</code>'s alignment. (The size
+of a <code class="prettyprint lang-d">class</code> instance is obtained by using <code class="prettyprint lang-d">_traits(classInstanceSize, T)</code>).
+</td>
+					</tr>
+					<tr>
+						<td>
+							<a id="emplace" class="public" href="../std/conv/emplace.html">
+								<code>emplace</code>
+							</a>
+						</td>
+						<td>Given a pointer <code class="prettyprint lang-d"><a href="../std/conv/emplace.html#chunk"><code class="prettyprint lang-d">chunk</code></a></code> <a href="../std/conv/to.html"><code class="prettyprint lang-d">to</code></a> uninitialized memory (but already typed
+as a non-class type <code class="prettyprint lang-d">T</code>), constructs an <a href="../object.html"><code class="prettyprint lang-d">object</code></a> of type <code class="prettyprint lang-d">T</code> at
+that address from arguments <code class="prettyprint lang-d"><a href="../std/conv/emplace.html#args"><code class="prettyprint lang-d">args</code></a></code>.
+</td>
+					</tr>
+					<tr>
+						<td>
+							<a id="emplace" class="public" href="../std/conv/emplace.html">
+								<code>emplace</code>
+							</a>
+						</td>
+						<td>Given a pointer <code class="prettyprint lang-d"><a href="../std/conv/emplace.html#chunk"><code class="prettyprint lang-d">chunk</code></a></code> <a href="../std/conv/to.html"><code class="prettyprint lang-d">to</code></a> uninitialized memory (but already typed
+as <code class="prettyprint lang-d">T</code>), constructs an <a href="../object.html"><code class="prettyprint lang-d">object</code></a> of non-<code class="prettyprint lang-d">class</code> type <code class="prettyprint lang-d">T</code> at that
+address.
+</td>
+					</tr>
+					<tr>
+						<td>
+							<a id="octal" class="public property" href="../std/conv/octal.html">
+								<code>octal</code>
+							</a>
+						</td>
+						<td>The <code class="prettyprint lang-d"><a href="../std/conv/octal.html"><code class="prettyprint lang-d">octal</code></a></code> facility provides a means <a href="../std/conv/to.html"><code class="prettyprint lang-d">to</code></a> declare a number in base 8.
+Using <code class="prettyprint lang-d"><a href="../std/conv/octal.html"><code class="prettyprint lang-d">octal</code></a>!177</code> or <code class="prettyprint lang-d"><a href="../std/conv/octal.html"><code class="prettyprint lang-d">octal</code></a>!"177"</code> for 127 represented in <a href="../std/conv/octal.html"><code class="prettyprint lang-d">octal</code></a>
+(same as 0177 in C).
+</td>
+					</tr>
+					<tr>
+						<td>
+							<a id="parse" class="public" href="../std/conv/parse.html">
+								<code>parse</code>
+							</a>
+						</td>
+						<td> Parses an associative array from a string given the left bracket (default <code class="prettyprint lang-d">'['</code>), right bracket (default <code class="prettyprint lang-d">']'</code>), key-value separator (default <code class="prettyprint lang-d">':'</code>), and element seprator (by default <code class="prettyprint lang-d">','</code>).
+</td>
+					</tr>
+					<tr>
+						<td>
+							<a id="parse" class="public" href="../std/conv/parse.html">
+								<code>parse</code>
+							</a>
+						</td>
+						<td> Parses an array from a string given the left bracket (default <code class="prettyprint lang-d">'['</code>), right bracket (default <code class="prettyprint lang-d">']'</code>), and element separator (by
+ default <code class="prettyprint lang-d">','</code>).
+</td>
+					</tr>
+					<tr>
+						<td>
+							<a id="parse" class="public" href="../std/conv/parse.html">
+								<code>parse</code>
+							</a>
+						</td>
+						<td>Parsing one character off a string returns the character and bumps the
+string up one position.
+</td>
+					</tr>
+					<tr>
+						<td>
+							<a id="parse" class="public" href="../std/conv/parse.html">
+								<code>parse</code>
+							</a>
+						</td>
+						<td> Parses an array from a string given the left bracket (default <code class="prettyprint lang-d">'['</code>), right bracket (default <code class="prettyprint lang-d">']'</code>), and element separator (by
+ default <code class="prettyprint lang-d">','</code>).
+</td>
+					</tr>
+					<tr>
+						<td>
+							<a id="parse" class="public" href="../std/conv/parse.html">
+								<code>parse</code>
+							</a>
+						</td>
+						<td> The <span class="d_param"><a href="../std/conv/parse.html"><code class="prettyprint lang-d">parse</code></a></span> family of functions works quite like the
+ <span class="d_param"><a href="../std/conv/to.html"><code class="prettyprint lang-d">to</code></a></span> family, except that (1) it only works with character ranges
+ as input, (2) takes the input by reference and advances it <a href="../std/conv/to.html"><code class="prettyprint lang-d">to</code></a>
+ the position following the conversion, and (3) does not throw if it
+ could not convert the entire input. It still throws if an overflow
+ occurred during conversion or if no character of the input
+ was meaningfully converted.
+</td>
+					</tr>
+					<tr>
+						<td>
+							<a id="signed" class="public" href="../std/conv/signed.html">
+								<code>signed</code>
+							</a>
+						</td>
+						<td>    Returns the corresponding signed value for <code class="prettyprint lang-d"><a href="../std/conv/signed.html#x"><code class="prettyprint lang-d">x</code></a></code> (e.g. if <code class="prettyprint lang-d"><a href="../std/conv/signed.html#x"><code class="prettyprint lang-d">x</code></a></code> has type
+    <code class="prettyprint lang-d">uint</code>, it returns <code class="prettyprint lang-d">cast(int) <a href="../std/conv/signed.html#x"><code class="prettyprint lang-d">x</code></a></code>). The advantage compared <a href="../std/conv/to.html"><code class="prettyprint lang-d">to</code></a> the cast
+    is that you do not need <a href="../std/conv/to.html"><code class="prettyprint lang-d">to</code></a> rewrite the cast if <code class="prettyprint lang-d"><a href="../std/conv/signed.html#x"><code class="prettyprint lang-d">x</code></a></code> later changes type
+    (e.g from <code class="prettyprint lang-d">uint</code> <a href="../std/conv/to.html"><code class="prettyprint lang-d">to</code></a> <code class="prettyprint lang-d">ulong</code>).
+</td>
+					</tr>
+					<tr>
+						<td>
+							<a id="text" class="public" href="../std/conv/text.html">
+								<code>text</code>
+							</a>
+						</td>
+						<td> Convenience functions for converting any number and types of
+ arguments into text (the three character widths).
+</td>
+					</tr>
+					<tr>
+						<td>
+							<a id="toChars" class="public" href="../std/conv/to_chars.html">
+								<code>toChars</code>
+							</a>
+						</td>
+						<td> Convert integer <a href="../std/conv/to.html"><code class="prettyprint lang-d">to</code></a> a range of characters.
+ Intended <a href="../std/conv/to.html"><code class="prettyprint lang-d">to</code></a> be lightweight and fast.
+</td>
+					</tr>
+					<tr>
+						<td>
+							<a id="toImpl" class="public" href="../std/conv/to_impl.html">
+								<code>toImpl</code>
+							</a>
+						</td>
+						<td>Convert a <a href="../std/conv/to_impl.html#value"><code class="prettyprint lang-d">value</code></a> that is implicitly convertible <a href="../std/conv/to.html"><code class="prettyprint lang-d">to</code></a> the enum base type
+into an Enum <a href="../std/conv/to_impl.html#value"><code class="prettyprint lang-d">value</code></a>. If the <a href="../std/conv/to_impl.html#value"><code class="prettyprint lang-d">value</code></a> does not match any enum member values
+a <a href="../std/conv/conv_exception.html"><code class="prettyprint lang-d">ConvException</code></a> is thrown.
+Enums with floating-point or string base types are not supported.
+</td>
+					</tr>
+					<tr>
+						<td>
+							<a id="toImpl" class="public" href="../std/conv/to_impl.html">
+								<code>toImpl</code>
+							</a>
+						</td>
+						<td>String <a href="../std/conv/to.html"><code class="prettyprint lang-d">to</code></a> non-string conversion runs parsing.
+<ul><li>When the source is a wide string, it is first converted <a href="../std/conv/to.html"><code class="prettyprint lang-d">to</code></a> a narrow
+       string and then parsed.</li>
+  <li>When the source is a narrow string, normal <a href="../std/conv/text.html"><code class="prettyprint lang-d">text</code></a> parsing occurs.</li></ul>
+</td>
+					</tr>
+					<tr>
+						<td>
+							<a id="toImpl" class="public" href="../std/conv/to_impl.html">
+								<code>toImpl</code>
+							</a>
+						</td>
+						<td>Associative array <a href="../std/conv/to.html"><code class="prettyprint lang-d">to</code></a> associative array conversion converts each key
+and each <a href="../std/conv/to_impl.html#value"><code class="prettyprint lang-d">value</code></a> in turn.
+</td>
+					</tr>
+					<tr>
+						<td>
+							<a id="toImpl" class="public" href="../std/conv/to_impl.html">
+								<code>toImpl</code>
+							</a>
+						</td>
+						<td>Array-<a href="../std/conv/to.html"><code class="prettyprint lang-d">to</code></a>-array conversion (except when target is a string type)
+converts each element in turn by using <code class="prettyprint lang-d"><a href="../std/conv/to.html"><code class="prettyprint lang-d">to</code></a></code>.
+</td>
+					</tr>
+					<tr>
+						<td>
+							<a id="toImpl" class="public" href="../std/conv/to_impl.html">
+								<code>toImpl</code>
+							</a>
+						</td>
+						<td>Narrowing numeric-numeric conversions throw when the <a href="../std/conv/to_impl.html#value"><code class="prettyprint lang-d">value</code></a> does not
+fit in the narrower type.
+</td>
+					</tr>
+					<tr>
+						<td>
+							<a id="toImpl" class="public" href="../std/conv/to_impl.html">
+								<code>toImpl</code>
+							</a>
+						</td>
+						<td>Stringize conversion from all types is supported.
+<ul><li>String to string conversion works for any two string types having
+       (<code class="prettyprint lang-d">char</code>, <code class="prettyprint lang-d">wchar</code>, <code class="prettyprint lang-d">dchar</code>) character widths and any
+       combination of qualifiers (mutable, <code class="prettyprint lang-d">const</code>, or <code class="prettyprint lang-d">immutable</code>).</li>
+  <li>Converts array (other than strings) <a href="../std/conv/to.html"><code class="prettyprint lang-d">to</code></a> string.
+       Each element is converted by calling <code class="prettyprint lang-d"><a href="../std/conv/to.html"><code class="prettyprint lang-d">to</code></a>!T</code>.</li>
+  <li>Associative array <a href="../std/conv/to.html"><code class="prettyprint lang-d">to</code></a> string conversion.
+       Each element is printed by calling <code class="prettyprint lang-d"><a href="../std/conv/to.html"><code class="prettyprint lang-d">to</code></a>!T</code>.</li>
+  <li>Object <a href="../std/conv/to.html"><code class="prettyprint lang-d">to</code></a> string conversion calls <code class="prettyprint lang-d">toString</code> against the <a href="../object.html"><code class="prettyprint lang-d">object</code></a> or
+       returns <code class="prettyprint lang-d">"null"</code> if the <a href="../object.html"><code class="prettyprint lang-d">object</code></a> is null.</li>
+  <li>Struct <a href="../std/conv/to.html"><code class="prettyprint lang-d">to</code></a> string conversion calls <code class="prettyprint lang-d">toString</code> against the struct if
+       it is defined.</li>
+  <li>For structs that do not define <code class="prettyprint lang-d">toString</code>, the conversion <a href="../std/conv/to.html"><code class="prettyprint lang-d">to</code></a> string
+       produces the list of fields.</li>
+  <li>Enumerated types are converted <a href="../std/conv/to.html"><code class="prettyprint lang-d">to</code></a> strings as their symbolic names.</li>
+  <li>Boolean values are printed as <code class="prettyprint lang-d">"true"</code> or <code class="prettyprint lang-d">"false"</code>.</li>
+  <li><code class="prettyprint lang-d">char</code>, <code class="prettyprint lang-d">wchar</code>, <code class="prettyprint lang-d">dchar</code> <a href="../std/conv/to.html"><code class="prettyprint lang-d">to</code></a> a string type.</li>
+  <li>Unsigned or <a href="../std/conv/signed.html"><code class="prettyprint lang-d">signed</code></a> integers <a href="../std/conv/to.html"><code class="prettyprint lang-d">to</code></a> strings.
+       <dl><dt>[special case]</dt>
+            <dd>Convert integral <a href="../std/conv/to_impl.html#value"><code class="prettyprint lang-d">value</code></a> <a href="../std/conv/to.html"><code class="prettyprint lang-d">to</code></a> string in <span class="d_param"><a href="../std/conv/to_impl.html#radix"><code class="prettyprint lang-d">radix</code></a></span> <a href="../std/conv/to_impl.html#radix"><code class="prettyprint lang-d">radix</code></a>.
+            <a href="../std/conv/to_impl.html#radix"><code class="prettyprint lang-d">radix</code></a> must be a <a href="../std/conv/to_impl.html#value"><code class="prettyprint lang-d">value</code></a> from 2 <a href="../std/conv/to.html"><code class="prettyprint lang-d">to</code></a> 36.
+            <a href="../std/conv/to_impl.html#value"><code class="prettyprint lang-d">value</code></a> is treated as a <a href="../std/conv/signed.html"><code class="prettyprint lang-d">signed</code></a> <a href="../std/conv/to_impl.html#value"><code class="prettyprint lang-d">value</code></a> only if <a href="../std/conv/to_impl.html#radix"><code class="prettyprint lang-d">radix</code></a> is 10.
+            The characters A through Z are used <a href="../std/conv/to.html"><code class="prettyprint lang-d">to</code></a> represent values 10 through 36
+            and their case is determined by the <span class="d_param"><a href="../std/conv/to_impl.html#letterCase"><code class="prettyprint lang-d">letterCase</code></a></span> parameter.</dd></dl></li>
+  <li>All floating point types <a href="../std/conv/to.html"><code class="prettyprint lang-d">to</code></a> all string types.</li>
+  <li>Pointer <a href="../std/conv/to.html"><code class="prettyprint lang-d">to</code></a> string conversions prints the pointer as a <code class="prettyprint lang-d">size_t</code> <a href="../std/conv/to_impl.html#value"><code class="prettyprint lang-d">value</code></a>.
+       If pointer is <code class="prettyprint lang-d">char*</code>, treat it as C-style strings.
+       In that case, this function is <code class="prettyprint lang-d">@system</code>.</li></ul>
+</td>
+					</tr>
+					<tr>
+						<td>
+							<a id="toImpl" class="public" href="../std/conv/to_impl.html">
+								<code>toImpl</code>
+							</a>
+						</td>
+						<td>Object-<a href="../std/conv/to.html"><code class="prettyprint lang-d">to</code></a>-<a href="../object.html"><code class="prettyprint lang-d">object</code></a> conversions by dynamic casting throw exception when the source is
+non-null and the target is null.
+</td>
+					</tr>
+					<tr>
+						<td>
+							<a id="toImpl" class="public" href="../std/conv/to_impl.html">
+								<code>toImpl</code>
+							</a>
+						</td>
+						<td>When target type supports 'converting construction', it is used.
+<ul><li>If target type is struct, <code class="prettyprint lang-d">T(<a href="../std/conv/to_impl.html#value"><code class="prettyprint lang-d">value</code></a>)</code> is used.</li>
+     <li>If target type is class, <code class="prettyprint lang-d">new T(<a href="../std/conv/to_impl.html#value"><code class="prettyprint lang-d">value</code></a>)</code> is used.</li></ul>
+</td>
+					</tr>
+					<tr>
+						<td>
+							<a id="toImpl" class="public" href="../std/conv/to_impl.html">
+								<code>toImpl</code>
+							</a>
+						</td>
+						<td>When source type supports member template function opCast, it is used.
+</td>
+					</tr>
+					<tr>
+						<td>
+							<a id="toImpl" class="public" href="../std/conv/to_impl.html">
+								<code>toImpl</code>
+							</a>
+						</td>
+						<td>If the source type is implicitly convertible <a href="../std/conv/to.html"><code class="prettyprint lang-d">to</code></a> the target type, <code class="prettyprint lang-d"><a href="../std/conv/to.html"><code class="prettyprint lang-d">to</code></a></code> simply performs the implicit conversion.
+</td>
+					</tr>
+					<tr>
+						<td>
+							<a id="unsigned" class="public" href="../std/conv/unsigned.html">
+								<code>unsigned</code>
+							</a>
+						</td>
+						<td>    Returns the corresponding unsigned value for <code class="prettyprint lang-d"><a href="../std/conv/unsigned.html#x"><code class="prettyprint lang-d">x</code></a></code> (e.g. if <code class="prettyprint lang-d"><a href="../std/conv/unsigned.html#x"><code class="prettyprint lang-d">x</code></a></code> has type
+    <code class="prettyprint lang-d">int</code>, it returns <code class="prettyprint lang-d">cast(uint) <a href="../std/conv/unsigned.html#x"><code class="prettyprint lang-d">x</code></a></code>). The advantage compared <a href="../std/conv/to.html"><code class="prettyprint lang-d">to</code></a> the cast
+    is that you do not need <a href="../std/conv/to.html"><code class="prettyprint lang-d">to</code></a> rewrite the cast if <code class="prettyprint lang-d"><a href="../std/conv/unsigned.html#x"><code class="prettyprint lang-d">x</code></a></code> later changes type
+    (e.g from <code class="prettyprint lang-d">int</code> <a href="../std/conv/to.html"><code class="prettyprint lang-d">to</code></a> <code class="prettyprint lang-d">long</code>).
+</td>
+					</tr>
+					<tr>
+						<td>
+							<a id="wtext" class="public" href="../std/conv/wtext.html">
+								<code>wtext</code>
+							</a>
+						</td>
+						<td> Convenience functions for converting any number and types of
+ arguments into text (the three character widths).
+</td>
+					</tr>
+				</table>
+			</section>
+			<section>
+				<h2>Classes</h2>
+				<table>
+					<col class="caption"/>
+					<tr>
+						<th>Name</th>
+						<th>Description</th>
+					</tr>
+					<tr>
+						<td>
+							<a id="ConvException" class="public" href="../std/conv/conv_exception.html">
+								<code>ConvException</code>
+							</a>
+						</td>
+						<td> Thrown on conversion errors.
+</td>
+					</tr>
+					<tr>
+						<td>
+							<a id="ConvOverflowException" class="public" href="../std/conv/conv_overflow_exception.html">
+								<code>ConvOverflowException</code>
+							</a>
+						</td>
+						<td> Thrown on conversion overflow errors.
+</td>
+					</tr>
+				</table>
+			</section>
+			<section>
+				<h2>Templates</h2>
+				<table>
+					<col class="caption"/>
+					<tr>
+						<th>Name</th>
+						<th>Description</th>
+					</tr>
+					<tr>
+						<td>
+							<a id="castFrom" class="public" href="../std/conv/cast_from.html">
+								<code>castFrom</code>
+							</a>
+						</td>
+						<td>    A wrapper on top of the built-in cast operator that allows one <a href="../std/conv/cast_from.to.html"><code class="prettyprint lang-d">to</code></a> restrict
+    casting of the original type of the value.
+</td>
+					</tr>
+					<tr>
+						<td>
+							<a id="roundTo" class="public" href="../std/conv/round_to.html">
+								<code>roundTo</code>
+							</a>
+						</td>
+						<td> Rounded conversion from floating point <a href="../std/conv/to.html"><code class="prettyprint lang-d">to</code></a> integral.
+</td>
+					</tr>
+					<tr>
+						<td>
+							<a id="to" class="public" href="../std/conv/to.html">
+								<code>to</code>
+							</a>
+						</td>
+						<td>The <span class="d_param"><a href="../std/conv/to.to.html"><code class="prettyprint lang-d">to</code></a></span> family of functions converts a value from type
+<span class="d_param">Source</span> <a href="../std/conv/to.to.html"><code class="prettyprint lang-d">to</code></a> type <span class="d_param">Target</span>. The source type is
+deduced and the target type must be specified, for example the
+expression <span class="d_param"><a href="../std/conv/to.to.html"><code class="prettyprint lang-d">to</code></a>!int(42.0)</span> converts the number 42 from
+<span class="d_param">double</span> <a href="../std/conv/to.to.html"><code class="prettyprint lang-d">to</code></a> <span class="d_param">int</span>. The conversion is "safe", i.e.,
+it checks for overflow; <span class="d_param"><a href="../std/conv/to.to.html"><code class="prettyprint lang-d">to</code></a>!int(4.2e10)</span> would throw the
+<span class="d_param"><a href="../std/conv/conv_overflow_exception.html"><code class="prettyprint lang-d">ConvOverflowException</code></a></span> exception. Overflow checks are only
+inserted when necessary, e.g., <span class="d_param"><a href="../std/conv/to.to.html"><code class="prettyprint lang-d">to</code></a>!double(42)</span> does not do
+any checking because any int fits in a double.
+</td>
+					</tr>
+				</table>
+			</section>
+			<section>
+				<h2>Enum values</h2>
+				<table>
+					<col class="caption"/>
+					<tr>
+						<th>Name</th>
+						<th>Type</th>
+						<th>Description</th>
+					</tr>
+					<tr>
+						<td>
+							<a id="octal" class="public" href="../std/conv/octal.html">
+								<code>octal</code>
+							</a>
+						</td>
+						<td>
+						</td>
+						<td>The <code class="prettyprint lang-d"><code class="prettyprint lang-d">octal</code></code> facility provides a means <a href="../std/conv/to.html"><code class="prettyprint lang-d">to</code></a> declare a number in base 8.
+Using <code class="prettyprint lang-d"><code class="prettyprint lang-d">octal</code>!177</code> or <code class="prettyprint lang-d"><code class="prettyprint lang-d">octal</code>!"177"</code> for 127 represented in <code class="prettyprint lang-d">octal</code>
+(same as 0177 in C).
+</td>
+					</tr>
+				</table>
+			</section>
+			<section>
+				<h2>Global variables</h2>
+				<table>
+					<col class="caption"/>
+					<tr>
+						<th>Name</th>
+						<th>Type</th>
+						<th>Description</th>
+					</tr>
+					<tr>
+						<td>
+							<a id="hexString" class="public" href="../std/conv/hex_string.html">
+								<code>hexString</code>
+							</a>
+						</td>
+						<td>
+<code class="prettyprint lang-d">void</code>
+						</td>
+						<td>Converts a hex literal <a href="../std/conv/to.html"><code class="prettyprint lang-d">to</code></a> a string at compile time.
+</td>
+					</tr>
+				</table>
+			</section>
+			<section>
+				<h2>Authors</h2>
+<p><a href="http://digitalmars.com">Walter Bright</a>,
+           <a href="http://erdani.org">Andrei Alexandrescu</a>,
+           Shin Fujishiro,
+           Adam D. Ruppe,
+           Kenji Hara
+</p>
+
+			</section>
+			<section>
+				<h2>License</h2>
+<p><a href="http://boost.org/LICENSE_1_0.txt">Boost License 1.0</a>.
+</p>
+
+			</section>
+			<section>
+				<h2>Comments</h2>
+						<div id="disqus_thread"></div>
+						<script language="javascript">
+var disqus_shortname = 'vibe-d'; // required: replace example with your forum shortname
+var disqus_developer = 1;
+var disqus_identifier = "phobos-std.conv";
+
+
+/* * * DON'T EDIT BELOW THIS LINE * * */
+(function() {
+    var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+    dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+(document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+})();
+						</script>
+						<noscript>Please enable JavaScript to view the comments.</noscript>
+			</section>
+     
+			<div id="quickindex" class="quickindex"></div>
+		</div>
+		<div id="copyright">
+<p>Copyright Digital Mars 2007-.
+</p>
+
+ | Page generated by <a href="https://github.com/rejectedsoftware/ddox">ddox</a>.
+		</div>
+		<script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/1.7.2/jquery.min.js"></script>
+     
+		<script type="text/javascript">
+window.jQuery || document.write('<script src="../../js/jquery-1.7.2.min.js">\x3C/script>')
+		</script>
+     
+		<script type="text/javascript" src="../../js/codemirror-compressed.js"></script>
+     
+		<script type="text/javascript" src="../../js/run.js"></script>
+     
+		<script type="text/javascript" src="../../js/dlang.js"></script>
+		<script type="text/javascript" src="../../js/listanchors.js"></script>
+		<script type="text/javascript">
+jQuery(document).ready(listanchors);
+setupDdox();
+prettyPrint();
+		</script>
+	</body>
+</html>

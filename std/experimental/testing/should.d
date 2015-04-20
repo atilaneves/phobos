@@ -835,3 +835,37 @@ unittest
     inOrder.shouldNotBeSameSetAs(oops);
     inOrder.shouldNotBeSameSetAs(noOrder).shouldThrow!UnitTestException;
 }
+
+
+/**
+ * Verify that t and u represent the same set (ordering is not important).
+ * Throws: UnitTestException on failure.
+ */
+void shouldBeSameSetAs(T, U)(T t, U u, in string file = __FILE__, in ulong line = __LINE__)
+if (isInputRange!T && isInputRange!U && is(typeof(t.front != u.front) == bool))
+{
+    shouldEqual(std.algorithm.sort(t.array), std.algorithm.sort(u.array));
+}
+
+/**
+ * Verify that t and u do not represent the same set (ordering is not important).
+ * Throws: UnitTestException on failure.
+ */
+void shouldNotBeSameSetAs(T, U)(T t, U u, in string file = __FILE__, in ulong line = __LINE__)
+if (isInputRange!T && isInputRange!U && is(typeof(t.front != u.front) == bool))
+{
+    shouldNotEqual(std.algorithm.sort(t.array), std.algorithm.sort(u.array));
+}
+
+
+unittest
+{
+    auto inOrder = iota(4);
+    auto noOrder = [2, 3, 0, 1];
+    auto oops = [2, 3, 4, 5];
+    inOrder.shouldBeSameSetAs(noOrder);
+    inOrder.shouldBeSameSetAs(oops).shouldThrow!UnitTestException;
+
+    inOrder.shouldNotBeSameSetAs(oops);
+    inOrder.shouldNotBeSameSetAs(noOrder).shouldThrow!UnitTestException;
+}

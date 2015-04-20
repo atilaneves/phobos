@@ -1,0 +1,1232 @@
+<!DOCTYPE html>
+<html lang="en-US"><!-- 
+    | Copyright (c) 1999-2015 by Digital Mars
+    | All Rights Reserved Written by Walter Bright
+    | http://digitalmars.com
+	 -->
+	<head>
+		<meta charset="utf-8"/>
+		<meta name="keywords" content="D programming language"/>
+		<meta name="description" content="D Programming Language"/>
+		<title>Class FilterStream - D Programming Language - Digital Mars</title>
+		<link rel="stylesheet" href="../../../css/codemirror.css"/>
+		<link rel="stylesheet" href="../../../css/style.css"/>
+		<link rel="stylesheet" href="../../../css/print.css" media="print"/>
+		<link rel="stylesheet" href="../../../css/cssmenu.css"/>
+		<link rel="stylesheet" href="../../../css/ddox.css"/>
+		<link rel="stylesheet" href="../../../prettify/prettify.css" type="text/css"/>
+		<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.2.0/css/font-awesome.min.css"/>
+		<link rel="shortcut icon" href="../../../favicon.ico"/>
+		<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.7.2/jquery.min.js" type="text/javascript"></script>
+		<script type="text/javascript" src="../../../prettify/prettify.js"></script>
+		<script type="text/javascript" src="../../../js/ddox.js"></script>
+		<meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=0.1, maximum-scale=10.0"/>
+	</head>
+	<body id="Phobos Runtime Library" class="std">
+		<script type="text/javascript">
+document.body.className += ' have-javascript';
+		</script>
+		<div id="top">
+			<div id="header">
+				<a href="../../../" class="logo">
+					<img id="logo" width="125" height="95" alt="D Logo" src="../../../images/dlogo.svg"/>
+				</a>
+ &#x9;&#x9;
+				<span id="d-language-mobilehelper">
+					<a id="d-language" href="../../../">D Programming Language</a>
+				</span>
+			</div>
+		</div>
+		<div id="navigation">
+			<div id="search-box">
+				<form method="get" action="http://google.com/search">
+					<input id="domains" type="hidden" name="domains" value="dlang.org"/>
+             
+					<input id="sourceid" type="hidden" name="sourceid" value="google-search"/>
+             
+					<span id="search-query">
+						<input id="q" name="q" placeholder="Search"/>
+						<input id="symbolSearch" style="display: none" type="text" name="symbolSearch" placeholder="API Search" onchange="performSymbolSearch(80);" onkeypress="this.onchange();" onpaste="this.onchange();" oninput="this.onchange();" autofocus/>
+					</span>
+					<span id="search-dropdown">
+						<select id="sitesearch" name="sitesearch" size="1">
+							<option value="dlang.org">Entire D Site</option>
+                     
+							<option selected="" value="dlang.org/library">Library Reference</option>
+                     
+							<option value="digitalmars.com/d/archives">Newsgroup Archives</option>
+						</select>
+					</span>
+					<span id="search-submit">
+						<button type="submit">
+							<i class="fa fa-search"></i>
+							<span>go</span>
+						</button>
+					</span>
+				</form>
+			</div>
+			<div id="cssmenu">
+				<ul>
+					<li>
+						<a href="../../../index.html">
+							<span>D Lib 2.066.1</span>
+						</a>
+					</li>
+ &#x9;
+					<li>
+						<a href="../../../library-prerelease/index.html">
+							<span>Prerelease Version</span>
+						</a>
+					</li>
+ &#x9;
+						<li class="has-sub">
+							<a href="#" class="package">std</a>
+							<ul class="tree-view">
+						<li class="tree-view collapsed">
+							<a href="#" class="package">algorithm</a>
+							<ul class="tree-view">
+						<li>
+							<a href="../../std/algorithm/comparison.html" class=" module">comparison</a>
+						</li>
+						<li>
+							<a href="../../std/algorithm/iteration.html" class=" module">iteration</a>
+						</li>
+						<li>
+							<a href="../../std/algorithm/mutation.html" class=" module">mutation</a>
+						</li>
+						<li>
+							<a href="../../std/algorithm/searching.html" class=" module">searching</a>
+						</li>
+						<li>
+							<a href="../../std/algorithm/setops.html" class=" module">setops</a>
+						</li>
+						<li>
+							<a href="../../std/algorithm/sorting.html" class=" module">sorting</a>
+						</li>
+							</ul>
+						</li>
+						<li class="tree-view collapsed">
+							<a href="#" class="package">container</a>
+							<ul class="tree-view">
+						<li>
+							<a href="../../std/container/array.html" class=" module">array</a>
+						</li>
+						<li>
+							<a href="../../std/container/binaryheap.html" class=" module">binaryheap</a>
+						</li>
+						<li>
+							<a href="../../std/container/dlist.html" class=" module">dlist</a>
+						</li>
+						<li>
+							<a href="../../std/container/rbtree.html" class=" module">rbtree</a>
+						</li>
+						<li>
+							<a href="../../std/container/slist.html" class=" module">slist</a>
+						</li>
+						<li>
+							<a href="../../std/container/util.html" class=" module">util</a>
+						</li>
+							</ul>
+						</li>
+						<li class="tree-view collapsed">
+							<a href="#" class="package">digest</a>
+							<ul class="tree-view">
+						<li>
+							<a href="../../std/digest/crc.html" class=" module">crc</a>
+						</li>
+						<li>
+							<a href="../../std/digest/digest.html" class=" module">digest</a>
+						</li>
+						<li>
+							<a href="../../std/digest/md.html" class=" module">md</a>
+						</li>
+						<li>
+							<a href="../../std/digest/ripemd.html" class=" module">ripemd</a>
+						</li>
+						<li>
+							<a href="../../std/digest/sha.html" class=" module">sha</a>
+						</li>
+							</ul>
+						</li>
+						<li class="tree-view collapsed">
+							<a href="#" class="package">experimental</a>
+							<ul class="tree-view">
+						<li>
+							<a href="../../std/experimental/logger.html" class=" module">logger</a>
+						</li>
+							</ul>
+						</li>
+						<li class="tree-view collapsed">
+							<a href="#" class="package">net</a>
+							<ul class="tree-view">
+						<li>
+							<a href="../../std/net/curl.html" class=" module">curl</a>
+						</li>
+						<li>
+							<a href="../../std/net/isemail.html" class=" module">isemail</a>
+						</li>
+							</ul>
+						</li>
+						<li class="tree-view collapsed">
+							<a href="#" class="package">range</a>
+							<ul class="tree-view">
+						<li>
+							<a href="../../std/range/interfaces.html" class=" module">interfaces</a>
+						</li>
+						<li>
+							<a href="../../std/range/primitives.html" class=" module">primitives</a>
+						</li>
+							</ul>
+						</li>
+						<li>
+							<a href="../../std/algorithm.html" class=" module">algorithm</a>
+						</li>
+						<li>
+							<a href="../../std/array.html" class=" module">array</a>
+						</li>
+						<li>
+							<a href="../../std/ascii.html" class=" module">ascii</a>
+						</li>
+						<li>
+							<a href="../../std/base64.html" class=" module">base64</a>
+						</li>
+						<li>
+							<a href="../../std/bigint.html" class=" module">bigint</a>
+						</li>
+						<li>
+							<a href="../../std/bitmanip.html" class=" module">bitmanip</a>
+						</li>
+						<li>
+							<a href="../../std/compiler.html" class=" module">compiler</a>
+						</li>
+						<li>
+							<a href="../../std/complex.html" class=" module">complex</a>
+						</li>
+						<li>
+							<a href="../../std/concurrency.html" class=" module">concurrency</a>
+						</li>
+						<li>
+							<a href="../../std/container.html" class=" module">container</a>
+						</li>
+						<li>
+							<a href="../../std/conv.html" class=" module">conv</a>
+						</li>
+						<li>
+							<a href="../../std/cstream.html" class=" module">cstream</a>
+						</li>
+						<li>
+							<a href="../../std/csv.html" class=" module">csv</a>
+						</li>
+						<li>
+							<a href="../../std/datetime.html" class=" module">datetime</a>
+						</li>
+						<li>
+							<a href="../../std/demangle.html" class=" module">demangle</a>
+						</li>
+						<li>
+							<a href="../../std/encoding.html" class=" module">encoding</a>
+						</li>
+						<li>
+							<a href="../../std/exception.html" class=" module">exception</a>
+						</li>
+						<li>
+							<a href="../../std/file.html" class=" module">file</a>
+						</li>
+						<li>
+							<a href="../../std/functional.html" class=" module">functional</a>
+						</li>
+						<li>
+							<a href="../../std/getopt.html" class=" module">getopt</a>
+						</li>
+						<li>
+							<a href="../../std/json.html" class=" module">json</a>
+						</li>
+						<li>
+							<a href="../../std/math.html" class=" module">math</a>
+						</li>
+						<li>
+							<a href="../../std/mathspecial.html" class=" module">mathspecial</a>
+						</li>
+						<li>
+							<a href="../../std/mmfile.html" class=" module">mmfile</a>
+						</li>
+						<li>
+							<a href="../../std/numeric.html" class=" module">numeric</a>
+						</li>
+						<li>
+							<a href="../../std/outbuffer.html" class=" module">outbuffer</a>
+						</li>
+						<li>
+							<a href="../../std/parallelism.html" class=" module">parallelism</a>
+						</li>
+						<li>
+							<a href="../../std/path.html" class=" module">path</a>
+						</li>
+						<li>
+							<a href="../../std/process.html" class=" module">process</a>
+						</li>
+						<li>
+							<a href="../../std/random.html" class=" module">random</a>
+						</li>
+						<li>
+							<a href="../../std/range.html" class=" module">range</a>
+						</li>
+						<li>
+							<a href="../../std/regex.html" class=" module">regex</a>
+						</li>
+						<li>
+							<a href="../../std/signals.html" class=" module">signals</a>
+						</li>
+						<li>
+							<a href="../../std/socket.html" class=" module">socket</a>
+						</li>
+						<li>
+							<a href="../../std/socketstream.html" class=" module">socketstream</a>
+						</li>
+						<li>
+							<a href="../../std/stdint.html" class=" module">stdint</a>
+						</li>
+						<li>
+							<a href="../../std/stdio.html" class=" module">stdio</a>
+						</li>
+						<li>
+							<a href="../../std/stdiobase.html" class=" module">stdiobase</a>
+						</li>
+						<li>
+							<a href="../../std/stream.html" class="selected module">stream</a>
+						</li>
+						<li>
+							<a href="../../std/string.html" class=" module">string</a>
+						</li>
+						<li>
+							<a href="../../std/syserror.html" class=" module">syserror</a>
+						</li>
+						<li>
+							<a href="../../std/system.html" class=" module">system</a>
+						</li>
+						<li>
+							<a href="../../std/traits.html" class=" module">traits</a>
+						</li>
+						<li>
+							<a href="../../std/typecons.html" class=" module">typecons</a>
+						</li>
+						<li>
+							<a href="../../std/typetuple.html" class=" module">typetuple</a>
+						</li>
+						<li>
+							<a href="../../std/uni.html" class=" module">uni</a>
+						</li>
+						<li>
+							<a href="../../std/uri.html" class=" module">uri</a>
+						</li>
+						<li>
+							<a href="../../std/utf.html" class=" module">utf</a>
+						</li>
+						<li>
+							<a href="../../std/uuid.html" class=" module">uuid</a>
+						</li>
+						<li>
+							<a href="../../std/variant.html" class=" module">variant</a>
+						</li>
+						<li>
+							<a href="../../std/xml.html" class=" module">xml</a>
+						</li>
+						<li>
+							<a href="../../std/zip.html" class=" module">zip</a>
+						</li>
+						<li>
+							<a href="../../std/zlib.html" class=" module">zlib</a>
+						</li>
+							</ul>
+						</li>
+						<li class="has-sub collapsed">
+							<a href="#" class="package">core</a>
+							<ul class="tree-view">
+						<li class="tree-view collapsed">
+							<a href="#" class="package">stdc</a>
+							<ul class="tree-view">
+						<li>
+							<a href="../../core/stdc/complex.html" class=" module">complex</a>
+						</li>
+						<li>
+							<a href="../../core/stdc/ctype.html" class=" module">ctype</a>
+						</li>
+						<li>
+							<a href="../../core/stdc/errno.html" class=" module">errno</a>
+						</li>
+						<li>
+							<a href="../../core/stdc/fenv.html" class=" module">fenv</a>
+						</li>
+						<li>
+							<a href="../../core/stdc/float_.html" class=" module">float_</a>
+						</li>
+						<li>
+							<a href="../../core/stdc/inttypes.html" class=" module">inttypes</a>
+						</li>
+						<li>
+							<a href="../../core/stdc/limits.html" class=" module">limits</a>
+						</li>
+						<li>
+							<a href="../../core/stdc/locale.html" class=" module">locale</a>
+						</li>
+						<li>
+							<a href="../../core/stdc/math.html" class=" module">math</a>
+						</li>
+						<li>
+							<a href="../../core/stdc/signal.html" class=" module">signal</a>
+						</li>
+						<li>
+							<a href="../../core/stdc/stdarg.html" class=" module">stdarg</a>
+						</li>
+						<li>
+							<a href="../../core/stdc/stddef.html" class=" module">stddef</a>
+						</li>
+						<li>
+							<a href="../../core/stdc/stdint.html" class=" module">stdint</a>
+						</li>
+						<li>
+							<a href="../../core/stdc/stdio.html" class=" module">stdio</a>
+						</li>
+						<li>
+							<a href="../../core/stdc/stdlib.html" class=" module">stdlib</a>
+						</li>
+						<li>
+							<a href="../../core/stdc/string.html" class=" module">string</a>
+						</li>
+						<li>
+							<a href="../../core/stdc/tgmath.html" class=" module">tgmath</a>
+						</li>
+						<li>
+							<a href="../../core/stdc/time.html" class=" module">time</a>
+						</li>
+						<li>
+							<a href="../../core/stdc/wchar_.html" class=" module">wchar_</a>
+						</li>
+						<li>
+							<a href="../../core/stdc/wctype.html" class=" module">wctype</a>
+						</li>
+							</ul>
+						</li>
+						<li class="tree-view collapsed">
+							<a href="#" class="package">sync</a>
+							<ul class="tree-view">
+						<li>
+							<a href="../../core/sync/barrier.html" class=" module">barrier</a>
+						</li>
+						<li>
+							<a href="../../core/sync/condition.html" class=" module">condition</a>
+						</li>
+						<li>
+							<a href="../../core/sync/config.html" class=" module">config</a>
+						</li>
+						<li>
+							<a href="../../core/sync/exception.html" class=" module">exception</a>
+						</li>
+						<li>
+							<a href="../../core/sync/mutex.html" class=" module">mutex</a>
+						</li>
+						<li>
+							<a href="../../core/sync/rwmutex.html" class=" module">rwmutex</a>
+						</li>
+						<li>
+							<a href="../../core/sync/semaphore.html" class=" module">semaphore</a>
+						</li>
+							</ul>
+						</li>
+						<li>
+							<a href="../../core/atomic.html" class=" module">atomic</a>
+						</li>
+						<li>
+							<a href="../../core/bitop.html" class=" module">bitop</a>
+						</li>
+						<li>
+							<a href="../../core/checkedint.html" class=" module">checkedint</a>
+						</li>
+						<li>
+							<a href="../../core/cpuid.html" class=" module">cpuid</a>
+						</li>
+						<li>
+							<a href="../../core/demangle.html" class=" module">demangle</a>
+						</li>
+						<li>
+							<a href="../../core/exception.html" class=" module">exception</a>
+						</li>
+						<li>
+							<a href="../../core/math.html" class=" module">math</a>
+						</li>
+						<li>
+							<a href="../../core/memory.html" class=" module">memory</a>
+						</li>
+						<li>
+							<a href="../../core/runtime.html" class=" module">runtime</a>
+						</li>
+						<li>
+							<a href="../../core/simd.html" class=" module">simd</a>
+						</li>
+						<li>
+							<a href="../../core/thread.html" class=" module">thread</a>
+						</li>
+						<li>
+							<a href="../../core/time.html" class=" module">time</a>
+						</li>
+						<li>
+							<a href="../../core/vararg.html" class=" module">vararg</a>
+						</li>
+							</ul>
+						</li>
+						<li class="has-sub collapsed">
+							<a href="#" class="package">etc</a>
+							<ul class="tree-view">
+						<li class="tree-view collapsed">
+							<a href="#" class="package">c</a>
+							<ul class="tree-view">
+						<li>
+							<a href="../../etc/c/curl.html" class=" module">curl</a>
+						</li>
+							</ul>
+						</li>
+							</ul>
+						</li>
+						<li>
+							<a href="../../object.html" class=" module">object</a>
+						</li>
+					<li>
+						<a href="http://code.dlang.org">
+							<span>3rd Party Packages</span>
+						</a>
+					</li>
+				</ul>
+			</div>
+		</div>
+		<div style="position: absolute; height: 0;">
+			<ul id="symbolSearchResults" style="display: none"></ul>
+			<script type="application/javascript" src="../../symbols.js"></script>
+			<script type="application/javascript">
+var symbolSearchRootDir = "../../";
+$('#symbolSearchPane').show();
+			</script>
+		</div>
+		<div id="content" class="hyphenate">
+			<div id="tools">
+				<a href="https://github.com/D-Programming-Language/phobos/blob/v2.067.1/std/stream.d" class="tip button">
+ View source code
+					<span>
+ Display the source code in std/stream.d from which this page was generated on
+ github.
+					</span>
+				</a>
+				<a href="https://github.com/D-Programming-Language/phobos/edit/master/std/stream.d" class="tip button">
+ Improve this page
+					<span>
+ Quickly fork, edit online, and submit a pull request for this page.
+ Requires a signed-in GitHub account. This works well for small changes.
+ If you'd like to make larger changes you may want to consider using
+ local clone.
+					</span>
+				</a>
+				<a href="http://wiki.dlang.org/DocComments/Phobos/std.stream" class="tip button">
+ Page wiki
+					<span>
+ View or edit the community-maintained wiki page associated with this page.
+					</span>
+				</a>
+			</div>
+			<h1>Class <code><a href="../../std/stream.html">std.stream</a>.FilterStream</code></h1>
+			<section>
+				<p> A base class for streams that wrap a <a href="../../std/stream/filter_stream.source.html"><code class="prettyprint lang-d">source</code></a> stream with additional
+ functionality.
+</p>
+<section>
+<p> The method implementations forward <a href="../../std/stream/input_stream.read.html"><code class="prettyprint lang-d">read</code></a>/<a href="../../std/stream/output_stream.write.html"><code class="prettyprint lang-d">write</code></a>/<a href="../../std/stream/stream.seek.html"><code class="prettyprint lang-d">seek</code></a> calls to the
+ <a href="../../std/stream/filter_stream.source.html"><code class="prettyprint lang-d">source</code></a> stream. A <code class="prettyprint lang-d">FilterStream</code> can change the <a href="../../std/stream/stream.position.html"><code class="prettyprint lang-d">position</code></a> of the <a href="../../std/stream/filter_stream.source.html"><code class="prettyprint lang-d">source</code></a> stream
+ arbitrarily and may not keep the <a href="../../std/stream/filter_stream.source.html"><code class="prettyprint lang-d">source</code></a> stream state in sync with the
+ <code class="prettyprint lang-d">FilterStream</code>, even upon flushing and closing the <code class="prettyprint lang-d">FilterStream</code>. It is
+ recommended to not make any assumptions about the state of the <a href="../../std/stream/filter_stream.source.html"><code class="prettyprint lang-d">source</code></a> <a href="../../std/stream/stream.position.html"><code class="prettyprint lang-d">position</code></a>
+ and <a href="../../std/stream/input_stream.read.html"><code class="prettyprint lang-d">read</code></a>/<a href="../../std/stream/output_stream.write.html"><code class="prettyprint lang-d">write</code></a> state after a <code class="prettyprint lang-d">FilterStream</code> has acted upon it. Specifc subclasses
+ of <code class="prettyprint lang-d">FilterStream</code> should document how they modify the <a href="../../std/stream/filter_stream.source.html"><code class="prettyprint lang-d">source</code></a> stream and if any
+ invariants hold true between the <a href="../../std/stream/filter_stream.source.html"><code class="prettyprint lang-d">source</code></a> and filter.
+</p>
+</section>
+
+					<section>
+						<h3>Inherits from</h3>
+						<ul>
+							<li>
+								<code class="prettyprint lang-d"><code class="prettyprint lang-d"><a href="../../std/stream/stream.html">Stream</a></code></code>
+ (base class)
+							</li>
+						</ul>
+					</section>
+					<section>
+						<h3>Constructors</h3>
+						<table>
+							<col class="caption"/>
+							<tr>
+								<th>Name</th>
+								<th>Description</th>
+							</tr>
+							<tr>
+								<td>
+									<a href="../../std/stream/filter_stream.this.html" class="public">
+										<code>this</code>
+									</a>
+								</td>
+								<td>Construct a <a href="../../std/stream/filter_stream.html"><code class="prettyprint lang-d">FilterStream</code></a> for the given <a href="../../std/stream/filter_stream.this.html#source"><code class="prettyprint lang-d">source</code></a>.
+</td>
+							</tr>
+						</table>
+					</section>
+					<section>
+						<h3>Fields</h3>
+						<table>
+							<col class="caption"/>
+							<tr>
+								<th>Name</th>
+								<th>Type</th>
+								<th>Description</th>
+							</tr>
+							<tr>
+								<td>
+									<a href="../../std/stream/filter_stream.nest_close.html" class="public"><code>nestClose</code></a>
+								</td>
+								<td class="typecol"><code class="prettyprint lang-d">bool</code></td>
+								<td>Property indicating when this stream closes to <a href="../../std/stream/output_stream.close.html"><code class="prettyprint lang-d">close</code></a> the <a href="../../std/stream/filter_stream.source.html"><code class="prettyprint lang-d">source</code></a> stream as
+</td>
+							</tr>
+							<tr>
+								<td>
+									<a href="../../std/stream/stream.readable.html" class="public inherited"><code>readable</code></a>
+								</td>
+								<td class="typecol"><code class="prettyprint lang-d">bool</code></td>
+								<td>Indicates whether this stream can be <a href="../../std/stream/input_stream.read.html"><code class="prettyprint lang-d">read</code></a> from.
+</td>
+							</tr>
+							<tr>
+								<td>
+									<a href="../../std/stream/stream.seekable.html" class="public inherited"><code>seekable</code></a>
+								</td>
+								<td class="typecol"><code class="prettyprint lang-d">bool</code></td>
+								<td>Indicates whether this stream can be seeked within.
+</td>
+							</tr>
+							<tr>
+								<td>
+									<a href="../../std/stream/stream.writeable.html" class="public inherited"><code>writeable</code></a>
+								</td>
+								<td class="typecol"><code class="prettyprint lang-d">bool</code></td>
+								<td>Indicates whether this stream can be written to.
+</td>
+							</tr>
+							<tr>
+								<td>
+									<a href="../../std/stream/stream.isopen.html" class="protected inherited"><code>isopen</code></a>
+								</td>
+								<td class="typecol"><code class="prettyprint lang-d">bool</code></td>
+								<td>Indicates whether this stream is open.
+</td>
+							</tr>
+							<tr>
+								<td>
+									<a href="../../std/stream/stream.prev_cr.html" class="protected inherited"><code>prevCr</code></a>
+								</td>
+								<td class="typecol"><code class="prettyprint lang-d">bool</code></td>
+								<td> For a non-<a href="../../std/stream/stream.seekable.html"><code class="prettyprint lang-d">seekable</code></a> stream indicates that
+ the last <a href="../../std/stream/input_stream.read_line.html"><code class="prettyprint lang-d">readLine</code></a> or <a href="../../std/stream/input_stream.read_line.html"><code class="prettyprint lang-d">readLineW</code></a> ended on a
+ '\r' character.
+</td>
+							</tr>
+							<tr>
+								<td>
+									<a href="../../std/stream/stream.read_eof.html" class="protected inherited"><code>readEOF</code></a>
+								</td>
+								<td class="typecol"><code class="prettyprint lang-d">bool</code></td>
+								<td> Indicates whether this stream is at <a href="../../std/stream/input_stream.eof.html"><code class="prettyprint lang-d">eof</code></a>
+ after the last <a href="../../std/stream/input_stream.read.html"><code class="prettyprint lang-d">read</code></a> attempt.
+</td>
+							</tr>
+						</table>
+					</section>
+					<section>
+						<h3>Properties</h3>
+						<table>
+							<col class="caption"/>
+							<tr>
+								<th>Name</th>
+								<th>Type</th>
+								<th>Description</th>
+							</tr>
+							<tr>
+								<td>
+									<a href="../../std/stream/input_stream.available.html" class="public inherited property"><code>available</code></a>
+									<span class="tableEntryAnnotation">[get]</span>
+								</td>
+								<td class="typecol"><code class="prettyprint lang-d">ulong</code></td>
+								<td>Retrieve the number of bytes <a href="../../std/stream/input_stream.available.html"><code class="prettyprint lang-d">available</code></a> for immediate reading.
+</td>
+							</tr>
+							<tr>
+								<td>
+									<a href="../../std/stream/input_stream.eof.html" class="public inherited property"><code>eof</code></a>
+									<span class="tableEntryAnnotation">[get]</span>
+								</td>
+								<td class="typecol"><code class="prettyprint lang-d">bool</code></td>
+								<td> Return whether the current file position is the same as the end of the
+ file.
+</td>
+							</tr>
+							<tr>
+								<td>
+									<a href="../../std/stream/input_stream.is_open.html" class="public inherited property"><code>isOpen</code></a>
+									<span class="tableEntryAnnotation">[get]</span>
+								</td>
+								<td class="typecol"><code class="prettyprint lang-d">bool</code></td>
+								<td>Return true if the stream is currently open.
+</td>
+							</tr>
+							<tr>
+								<td>
+									<a href="../../std/stream/stream.position.html" class="public inherited property"><code>position</code></a>
+									<span class="tableEntryAnnotation">[set]</span>
+								</td>
+								<td class="typecol"><code class="prettyprint lang-d">ulong</code></td>
+								<td> Sets file <a href="../../std/stream/stream.position.html"><code class="prettyprint lang-d">position</code></a>. Equivalent to calling <a href="../../std/stream/stream.seek.html"><code class="prettyprint lang-d">seek</code></a>(<a href="../../std/stream/stream.position.html#pos"><code class="prettyprint lang-d">pos</code></a>, SeekPos.Set).
+</td>
+							</tr>
+							<tr>
+								<td>
+									<a href="../../std/stream/stream.position.html" class="public inherited property"><code>position</code></a>
+									<span class="tableEntryAnnotation">[get]</span>
+								</td>
+								<td class="typecol"><code class="prettyprint lang-d">ulong</code></td>
+								<td> Returns current file <a href="../../std/stream/stream.position.html"><code class="prettyprint lang-d">position</code></a>. Equivalent to <a href="../../std/stream/stream.seek.html"><code class="prettyprint lang-d">seek</code></a>(0, SeekPos.Current).
+</td>
+							</tr>
+							<tr>
+								<td>
+									<a href="../../std/stream/stream.size.html" class="public inherited property"><code>size</code></a>
+									<span class="tableEntryAnnotation">[get]</span>
+								</td>
+								<td class="typecol"><code class="prettyprint lang-d">ulong</code></td>
+								<td> Retrieve the <a href="../../std/stream/stream.size.html"><code class="prettyprint lang-d">size</code></a> of the stream in bytes.
+ The stream must be <a href="../../std/stream/stream.seekable.html"><code class="prettyprint lang-d">seekable</code></a> or a <a href="../../std/stream/seek_exception.html"><code class="prettyprint lang-d">SeekException</code></a> is thrown.
+</td>
+							</tr>
+						</table>
+					</section>
+					<section>
+						<h3>Methods</h3>
+						<table>
+							<col class="caption"/>
+							<tr>
+								<th>Name</th>
+								<th>Description</th>
+							</tr>
+							<tr>
+								<td>
+									<a href="../../std/stream/filter_stream.reset_source.html" class="public">
+										<code>resetSource</code>
+									</a>
+								</td>
+								<td> Indicates the <a href="../../std/stream/filter_stream.source.html"><code class="prettyprint lang-d">source</code></a> stream changed state and that this stream should reset
+ any <a href="../../std/stream/stream.readable.html"><code class="prettyprint lang-d">readable</code></a>, <a href="../../std/stream/stream.writeable.html"><code class="prettyprint lang-d">writeable</code></a>, <a href="../../std/stream/stream.seekable.html"><code class="prettyprint lang-d">seekable</code></a>, <a href="../../std/stream/stream.isopen.html"><code class="prettyprint lang-d">isopen</code></a> and buffering flags.
+</td>
+							</tr>
+							<tr>
+								<td>
+									<a href="../../std/stream/filter_stream.source.html" class="public">
+										<code>source</code>
+									</a>
+								</td>
+								<td> Get the current <code class="prettyprint lang-d">source</code> stream.
+</td>
+							</tr>
+							<tr>
+								<td>
+									<a href="../../std/stream/filter_stream.source.html" class="public">
+										<code>source</code>
+									</a>
+								</td>
+								<td> Set the current <a href="../../std/stream/filter_stream.source.html"><code class="prettyprint lang-d">source</code></a> stream.
+</td>
+							</tr>
+							<tr>
+								<td>
+									<a href="../../std/stream/output_stream.close.html" class="public inherited">
+										<code>close</code>
+									</a>
+								</td>
+								<td>Close the stream, flushing output if appropriate.
+</td>
+							</tr>
+							<tr>
+								<td>
+									<a href="../../std/stream/stream.copy_from.html" class="public inherited">
+										<code>copyFrom</code>
+									</a>
+								</td>
+								<td> Copies all data from <a href="../../std/stream/stream.copy_from.html#s"><code class="prettyprint lang-d">s</code></a> into this stream.
+ This may throw <a href="../../std/stream/read_exception.html"><code class="prettyprint lang-d">ReadException</code></a> or <a href="../../std/stream/write_exception.html"><code class="prettyprint lang-d">WriteException</code></a> on failure.
+ This restores the file <a href="../../std/stream/stream.position.html"><code class="prettyprint lang-d">position</code></a> of <a href="../../std/stream/stream.copy_from.html#s"><code class="prettyprint lang-d">s</code></a> so that it is unchanged.
+</td>
+							</tr>
+							<tr>
+								<td>
+									<a href="../../std/stream/stream.copy_from.html" class="public inherited">
+										<code>copyFrom</code>
+									</a>
+								</td>
+								<td> Copy a specified number of bytes from the given stream into this one.
+ This may throw <a href="../../std/stream/read_exception.html"><code class="prettyprint lang-d">ReadException</code></a> or <a href="../../std/stream/write_exception.html"><code class="prettyprint lang-d">WriteException</code></a> on failure.
+ Unlike the previous form, this doesn't restore the file <a href="../../std/stream/stream.position.html"><code class="prettyprint lang-d">position</code></a> of <a href="../../std/stream/stream.copy_from.html#s"><code class="prettyprint lang-d">s</code></a>.
+</td>
+							</tr>
+							<tr>
+								<td>
+									<a href="../../object/object.factory.html" class="public inherited">
+										<code>factory</code>
+									</a>
+								</td>
+								<td> Create instance of class specified by the fully qualified name
+ <a href="../../object/object.factory.html#classname"><code class="prettyprint lang-d">classname</code></a>.
+ The class must either have no constructors or have
+ a default constructor.
+</td>
+							</tr>
+							<tr>
+								<td>
+									<a href="../../std/stream/output_stream.flush.html" class="public inherited">
+										<code>flush</code>
+									</a>
+								</td>
+								<td>Flush pending output if appropriate.
+</td>
+							</tr>
+							<tr>
+								<td>
+									<a href="../../std/stream/input_stream.getc.html" class="public inherited">
+										<code>getc</code>
+									</a>
+								</td>
+								<td> Read and return the next character in the stream.
+</td>
+							</tr>
+							<tr>
+								<td>
+									<a href="../../std/stream/input_stream.getcw.html" class="public inherited">
+										<code>getcw</code>
+									</a>
+								</td>
+								<td> Read and return the next character in the stream.
+</td>
+							</tr>
+							<tr>
+								<td>
+									<a href="../../std/stream/input_stream.op_apply.html" class="public inherited">
+										<code>opApply</code>
+									</a>
+								</td>
+								<td> Overload foreach statements to <a href="../../std/stream/input_stream.read.html"><code class="prettyprint lang-d">read</code></a> the stream line by line and call the
+ supplied delegate with each line or with each line with line number.
+</td>
+							</tr>
+							<tr>
+								<td>
+									<a href="../../object/object.op_cmp.html" class="public inherited">
+										<code>opCmp</code>
+									</a>
+								</td>
+								<td> Compare with another <a href="../../object/object.html"><code class="prettyprint lang-d">Object</code></a> obj.
+</td>
+							</tr>
+							<tr>
+								<td>
+									<a href="../../object/object.op_equals.html" class="public inherited">
+										<code>opEquals</code>
+									</a>
+								</td>
+								<td> Returns !=0 if this <a href="../../object.html"><code class="prettyprint lang-d">object</code></a> does have the same contents as obj.
+</td>
+							</tr>
+							<tr>
+								<td>
+									<a href="../../std/stream/output_stream.printf.html" class="public inherited">
+										<code>printf</code>
+									</a>
+								</td>
+								<td> Print a formatted string into the stream using <a href="../../std/stream/output_stream.printf.html"><code class="prettyprint lang-d">printf</code></a>-style syntax,
+ returning the number of bytes written.
+</td>
+							</tr>
+							<tr>
+								<td>
+									<a href="../../std/stream/input_stream.read.html" class="public inherited">
+										<code>read</code>
+									</a>
+								</td>
+								<td> Read a basic type or counted string.
+</td>
+							</tr>
+							<tr>
+								<td>
+									<a href="../../std/stream/input_stream.read.html" class="public inherited">
+										<code>read</code>
+									</a>
+								</td>
+								<td> Read a block of data big enough to fill the given array <a href="../../std/stream/input_stream.read.html#buffer"><code class="prettyprint lang-d">buffer</code></a>.
+</td>
+							</tr>
+							<tr>
+								<td>
+									<a href="../../std/stream/input_stream.read.html" class="public inherited">
+										<code>read</code>
+									</a>
+								</td>
+								<td> Read a basic type or counted string.
+</td>
+							</tr>
+							<tr>
+								<td>
+									<a href="../../std/stream/stream.read_block.html" class="public inherited">
+										<code>readBlock</code>
+									</a>
+								</td>
+								<td> Read up to <a href="../../std/stream/stream.read_block.html#size"><code class="prettyprint lang-d">size</code></a> bytes into the <a href="../../std/stream/stream.read_block.html#buffer"><code class="prettyprint lang-d">buffer</code></a> and return the number of bytes
+ actually <a href="../../std/stream/input_stream.read.html"><code class="prettyprint lang-d">read</code></a>. A return value of 0 indicates end-of-file.
+</td>
+							</tr>
+							<tr>
+								<td>
+									<a href="../../std/stream/input_stream.read_exact.html" class="public inherited">
+										<code>readExact</code>
+									</a>
+								</td>
+								<td> Read exactly <a href="../../std/stream/input_stream.read_exact.html#size"><code class="prettyprint lang-d">size</code></a> bytes into the <a href="../../std/stream/input_stream.read_exact.html#buffer"><code class="prettyprint lang-d">buffer</code></a>.
+</td>
+							</tr>
+							<tr>
+								<td>
+									<a href="../../std/stream/input_stream.readf.html" class="public inherited">
+										<code>readf</code>
+									</a>
+								</td>
+								<td> Scan a string from the input using a similar form to C's scanf
+ and <a href="std_format.html">std.format</a>.
+</td>
+							</tr>
+							<tr>
+								<td>
+									<a href="../../std/stream/input_stream.read_line.html" class="public inherited">
+										<code>readLine</code>
+									</a>
+								</td>
+								<td> Read a line that is terminated with some combination of carriage return and
+ line feed or end-of-file.
+</td>
+							</tr>
+							<tr>
+								<td>
+									<a href="../../std/stream/input_stream.read_line.html" class="public inherited">
+										<code>readLineW</code>
+									</a>
+								</td>
+								<td> Read a line that is terminated with some combination of carriage return and
+ line feed or end-of-file.
+</td>
+							</tr>
+							<tr>
+								<td>
+									<a href="../../std/stream/input_stream.read_string.html" class="public inherited">
+										<code>readString</code>
+									</a>
+								</td>
+								<td>Read a string of the given <a href="../../std/stream/input_stream.read_string.html#length"><code class="prettyprint lang-d">length</code></a>,
+</td>
+							</tr>
+							<tr>
+								<td>
+									<a href="../../std/stream/input_stream.read_string.html" class="public inherited">
+										<code>readStringW</code>
+									</a>
+								</td>
+								<td> Read a string of the given <a href="../../std/stream/input_stream.read_string.html#length"><code class="prettyprint lang-d">length</code></a>, throwing <a href="../../std/stream/read_exception.html"><code class="prettyprint lang-d">ReadException</code></a> if there was a
+ problem.
+</td>
+							</tr>
+							<tr>
+								<td>
+									<a href="../../std/stream/stream.seek.html" class="public inherited">
+										<code>seek</code>
+									</a>
+								</td>
+								<td> Change the current <a href="../../std/stream/stream.position.html"><code class="prettyprint lang-d">position</code></a> of the stream. <a href="../../std/stream/stream.seek.html#whence"><code class="prettyprint lang-d">whence</code></a> is either SeekPos.Set, in
+   which case the <a href="../../std/stream/stream.seek.html#offset"><code class="prettyprint lang-d">offset</code></a> is an absolute index from the beginning of the stream,
+   SeekPos.Current, in which case the <a href="../../std/stream/stream.seek.html#offset"><code class="prettyprint lang-d">offset</code></a> is a delta from the current
+   <a href="../../std/stream/stream.position.html"><code class="prettyprint lang-d">position</code></a>, or SeekPos.End, in which case the <a href="../../std/stream/stream.seek.html#offset"><code class="prettyprint lang-d">offset</code></a> is a delta from the end of
+   the stream (negative or zero offsets only make sense in that case). This
+   returns the new file <a href="../../std/stream/stream.position.html"><code class="prettyprint lang-d">position</code></a>.
+</td>
+							</tr>
+							<tr>
+								<td>
+									<a href="../../std/stream/stream.seek_cur.html" class="public inherited">
+										<code>seekCur</code>
+									</a>
+								</td>
+								<td> Aliases for their normal <a href="../../std/stream/stream.seek.html"><code class="prettyprint lang-d">seek</code></a> counterparts.
+</td>
+							</tr>
+							<tr>
+								<td>
+									<a href="../../std/stream/stream.seek_end.html" class="public inherited">
+										<code>seekEnd</code>
+									</a>
+								</td>
+								<td> Aliases for their normal <a href="../../std/stream/stream.seek.html"><code class="prettyprint lang-d">seek</code></a> counterparts.
+</td>
+							</tr>
+							<tr>
+								<td>
+									<a href="../../std/stream/stream.seek_set.html" class="public inherited">
+										<code>seekSet</code>
+									</a>
+								</td>
+								<td> Aliases for their normal <a href="../../std/stream/stream.seek.html"><code class="prettyprint lang-d">seek</code></a> counterparts.
+</td>
+							</tr>
+							<tr>
+								<td>
+									<a href="../../std/stream/stream.to_hash.html" class="public inherited">
+										<code>toHash</code>
+									</a>
+								</td>
+								<td> Get a hash of the stream by reading each byte and using it in a CRC-32
+ checksum.
+</td>
+							</tr>
+							<tr>
+								<td>
+									<a href="../../std/stream/stream.to_string.html" class="public inherited">
+										<code>toString</code>
+									</a>
+								</td>
+								<td> Read the entire stream and return it as a string.
+ If the stream is not <a href="../../std/stream/stream.seekable.html"><code class="prettyprint lang-d">seekable</code></a> the contents from the current <a href="../../std/stream/stream.position.html"><code class="prettyprint lang-d">position</code></a> to <a href="../../std/stream/input_stream.eof.html"><code class="prettyprint lang-d">eof</code></a>
+ is <a href="../../std/stream/input_stream.read.html"><code class="prettyprint lang-d">read</code></a> and returned.
+</td>
+							</tr>
+							<tr>
+								<td>
+									<a href="../../std/stream/input_stream.ungetc.html" class="public inherited">
+										<code>ungetc</code>
+									</a>
+								</td>
+								<td> Push a character back onto the stream.
+</td>
+							</tr>
+							<tr>
+								<td>
+									<a href="../../std/stream/input_stream.ungetcw.html" class="public inherited">
+										<code>ungetcw</code>
+									</a>
+								</td>
+								<td> Push a character back onto the stream.
+</td>
+							</tr>
+							<tr>
+								<td>
+									<a href="../../std/stream/output_stream.vprintf.html" class="public inherited">
+										<code>vprintf</code>
+									</a>
+								</td>
+								<td> Print a formatted string into the stream using <a href="../../std/stream/output_stream.printf.html"><code class="prettyprint lang-d">printf</code></a>-style syntax,
+ returning the number of bytes written.
+</td>
+							</tr>
+							<tr>
+								<td>
+									<a href="../../std/stream/input_stream.vreadf.html" class="public inherited">
+										<code>vreadf</code>
+									</a>
+								</td>
+								<td> Scan a string from the input using a similar form to C's scanf
+ and <a href="std_format.html">std.format</a>.
+</td>
+							</tr>
+							<tr>
+								<td>
+									<a href="../../std/stream/output_stream.write.html" class="public inherited">
+										<code>write</code>
+									</a>
+								</td>
+								<td> Writes a string, together with its length.
+</td>
+							</tr>
+							<tr>
+								<td>
+									<a href="../../std/stream/output_stream.write.html" class="public inherited">
+										<code>write</code>
+									</a>
+								</td>
+								<td> Write a basic type.
+</td>
+							</tr>
+							<tr>
+								<td>
+									<a href="../../std/stream/output_stream.write.html" class="public inherited">
+										<code>write</code>
+									</a>
+								</td>
+								<td> Write as much of the <a href="../../std/stream/output_stream.write.html#buffer"><code class="prettyprint lang-d">buffer</code></a> as possible,
+ returning the number of bytes written.
+</td>
+							</tr>
+							<tr>
+								<td>
+									<a href="../../std/stream/output_stream.write.html" class="public inherited">
+										<code>write</code>
+									</a>
+								</td>
+								<td> Write a basic type.
+</td>
+							</tr>
+							<tr>
+								<td>
+									<a href="../../std/stream/stream.write_block.html" class="public inherited">
+										<code>writeBlock</code>
+									</a>
+								</td>
+								<td> Write up to <a href="../../std/stream/stream.write_block.html#size"><code class="prettyprint lang-d">size</code></a> bytes from <a href="../../std/stream/stream.write_block.html#buffer"><code class="prettyprint lang-d">buffer</code></a> in the stream, returning the actual
+ number of bytes that were written.
+</td>
+							</tr>
+							<tr>
+								<td>
+									<a href="../../std/stream/output_stream.write_exact.html" class="public inherited">
+										<code>writeExact</code>
+									</a>
+								</td>
+								<td> Write exactly <a href="../../std/stream/output_stream.write_exact.html#size"><code class="prettyprint lang-d">size</code></a> bytes from <a href="../../std/stream/output_stream.write_exact.html#buffer"><code class="prettyprint lang-d">buffer</code></a>, or throw a <a href="../../std/stream/write_exception.html"><code class="prettyprint lang-d">WriteException</code></a> if that
+ could not be done.
+</td>
+							</tr>
+							<tr>
+								<td>
+									<a href="../../std/stream/output_stream.writef.html" class="public inherited">
+										<code>writef</code>
+									</a>
+								</td>
+								<td> Print a formatted string into the stream using <a href="../../std/stream/output_stream.writef.html"><code class="prettyprint lang-d">writef</code></a>-style syntax.
+</td>
+							</tr>
+							<tr>
+								<td>
+									<a href="../../std/stream/output_stream.writefln.html" class="public inherited">
+										<code>writefln</code>
+									</a>
+								</td>
+								<td> Print a formatted string into the stream using <a href="../../std/stream/output_stream.writef.html"><code class="prettyprint lang-d">writef</code></a>-style syntax.
+</td>
+							</tr>
+							<tr>
+								<td>
+									<a href="../../std/stream/output_stream.writefx.html" class="public inherited">
+										<code>writefx</code>
+									</a>
+								</td>
+								<td> Print a formatted string into the stream using <a href="../../std/stream/output_stream.writef.html"><code class="prettyprint lang-d">writef</code></a>-style syntax.
+</td>
+							</tr>
+							<tr>
+								<td>
+									<a href="../../std/stream/output_stream.write_line.html" class="public inherited">
+										<code>writeLine</code>
+									</a>
+								</td>
+								<td> Write a line of text,
+ appending the line with an operating-system-specific line ending.
+</td>
+							</tr>
+							<tr>
+								<td>
+									<a href="../../std/stream/output_stream.write_line.html" class="public inherited">
+										<code>writeLineW</code>
+									</a>
+								</td>
+								<td> Write a line of text,
+ appending the line with an operating-system-specific line ending.
+</td>
+							</tr>
+							<tr>
+								<td>
+									<a href="../../std/stream/output_stream.write_string.html" class="public inherited">
+										<code>writeString</code>
+									</a>
+								</td>
+								<td> Write a string of text.
+</td>
+							</tr>
+							<tr>
+								<td>
+									<a href="../../std/stream/output_stream.write_string.html" class="public inherited">
+										<code>writeStringW</code>
+									</a>
+								</td>
+								<td> Write a string of text.
+</td>
+							</tr>
+						</table>
+					</section>
+
+			</section>
+			<section>
+				<h2>Authors</h2>
+
+			</section>
+			<section>
+				<h2>License</h2>
+
+			</section>
+			<section>
+				<h2>Comments</h2>
+						<div id="disqus_thread"></div>
+						<script language="javascript">
+var disqus_shortname = 'vibe-d'; // required: replace example with your forum shortname
+var disqus_developer = 1;
+var disqus_identifier = "phobos-std.stream";
+
+
+/* * * DON'T EDIT BELOW THIS LINE * * */
+(function() {
+    var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+    dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+(document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+})();
+						</script>
+						<noscript>Please enable JavaScript to view the comments.</noscript>
+			</section>
+     
+			<div id="quickindex" class="quickindex"></div>
+		</div>
+		<div id="copyright">
+
+ | Page generated by <a href="https://github.com/rejectedsoftware/ddox">ddox</a>.
+		</div>
+		<script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/1.7.2/jquery.min.js"></script>
+     
+		<script type="text/javascript">
+window.jQuery || document.write('<script src="../../../js/jquery-1.7.2.min.js">\x3C/script>')
+		</script>
+     
+		<script type="text/javascript" src="../../../js/codemirror-compressed.js"></script>
+     
+		<script type="text/javascript" src="../../../js/run.js"></script>
+     
+		<script type="text/javascript" src="../../../js/cssmenu.js"></script>
+		<script type="text/javascript" src="../../../js/listanchors.js"></script>
+		<script type="text/javascript">
+jQuery(document).ready(listanchors);
+setupDdox();
+prettyPrint();
+		</script>
+	</body>
+</html>
