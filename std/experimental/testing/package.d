@@ -34,3 +34,4 @@ public import std.experimental.testing.should;
 public import std.experimental.testing.testcase;
 public import std.experimental.testing.io;
 public import std.experimental.testing.reflection;
+public import std.experimental.testing.runner;
