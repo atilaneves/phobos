@@ -58,7 +58,7 @@ WEBSITE_DIR = ../web
 DOC_OUTPUT_DIR = $(WEBSITE_DIR)/phobos-prerelease
 BIGDOC_OUTPUT_DIR = /tmp
 SRC_DOCUMENTABLES = index.d $(addsuffix .d,$(STD_MODULES) \
-	$(EXTRA_DOCUMENTABLES))
+	$(EXTRA_DOCUMENTABLES) std/experimental/testing/gen_ut_main std/experimental/testing/gen_ut_main_mixin)
 STDDOC = $(DOCSRC)/html.ddoc $(DOCSRC)/dlang.org.ddoc $(DOCSRC)/std_navbar-prerelease.ddoc $(DOCSRC)/std.ddoc $(DOCSRC)/macros.ddoc $(DOCSRC)/.generated/modlist-prerelease.ddoc
 BIGSTDDOC = $(DOCSRC)/std_consolidated.ddoc $(DOCSRC)/macros.ddoc
 # Set DDOC, the documentation generator
@@ -144,7 +144,7 @@ MAIN = $(ROOT)/emptymain.d
 
 # Packages in std. Just mention the package name here and the actual files in
 # the package in STD_MODULES.
-STD_PACKAGES = $(addprefix std/, algorithm container experimental/logger \
+STD_PACKAGES = $(addprefix std/, algorithm container experimental/logger experimental/testing \
 	range regex)
 
 # Modules in std (including those in packages), in alphabetical order.
@@ -155,6 +155,8 @@ STD_MODULES = $(addprefix std/, \
   $(addprefix digest/, digest crc hmac md ripemd sha) \
   encoding exception \
   $(addprefix experimental/logger/, core filelogger nulllogger multilogger) \
+  $(addprefix experimental/testing/, attrs io options reflection runner should \
+	testcase testsuite) \
   file format functional getopt json math mathspecial \
   meta metastrings mmfile net/isemail net/curl numeric outbuffer parallelism path \
   process random \
