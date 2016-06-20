@@ -222,6 +222,18 @@ Build _getBuild() {
         ["std/internal/windows/advapi32.d", "std/windows/registry.d", "std/c/linux/pthread.d",
          "std/c/linux/termios.d", "std/c/linux/tipc.d"];
 
+    auto oldAllDFiles = chain(STD_MODULES, EXTRA_MODULES_COMMON, EXTRA_MODULES_LINUX,
+                             EXTRA_MODULES_OSX, EXTRA_MODULES_FREEBSD,
+                             EXTRA_MODULES_WIN32, EXTRA_MODULES_INTERNAL).map!(a => a ~ ".d").array ~
+        ["std/internal/windows/advapi32.d", "std/windows/registry.d", "std/c/linux/pthread.d",
+         "std/c/linux/termios.d", "std/c/linux/tipc.d"].array;
+    sort(oldAllDFiles);
+    auto newAllDFiles = objectFiles!(dSources).map!(a => a.dependenciesInProjectPath("")).join;
+    sort(newAllDFiles);
+    import std.conv;
+    assert(oldAllDFiles == newAllDFiles, text("\n\nold:\n", oldAllDFiles, "\n\nnew:\n", newAllDFiles, "\n"));
+
+
     assert(ALL_D_FILES.length == 167, ALL_D_FILES.length.to!string);
 
     // C files to be part of the build
@@ -531,7 +543,9 @@ private Target staticPhobos(string build, string model)() {
 
     auto path = buildPath("$project", "generated", OS, build, model, fileName);
     auto cmd = [DMD, dflags(build, model), "-lib", "-of$out", "$in"].join(" ");
-    auto dependencies = chain(cObjs!(build, model), [staticRuntime(build, model)]);
+    auto dependencies = chain(cObjs!(build, model),
+                              [staticRuntime(build, model)],
+                              sourcesToTargets!dSources);
     return Target(path, cmd, dependencies);
 }
 
@@ -585,6 +599,11 @@ private string dflags(string build, string model) {
     return flags;
 }
 
+// D source files
+alias dSources = Sources!(["std", "etc"],
+                          Files(),
+                          Filter!(a => a.extension == ".d" && !a.canFind("linuxextern") && !a.canFind("test/uda.d")));
+
 // C source files
 alias cSources = Sources!(Dirs(["etc/c/zlib"]),
                           Files(),
@@ -618,8 +637,10 @@ private Target dynamicPhobos(string build, string model)() {
         auto cmd = [DMD, dflags(build, model), "-fPIC", "-shared",
                     "-debuglib=", "-defaultlib=", "-of$out",
                     "-L-soname=" ~ soName, LINKDL, "$in"].join(" ");
-        // ALL_D_FILES
-        auto dependencies = cObjs!(build, model) ~ dynamicRuntime(build, model);
+
+        auto dependencies = chain(cObjs!(build, model),
+                                  [dynamicRuntime(build, model)],
+                                  sourcesToTargets!dSources);
 
         auto phobos = Target(patchName, cmd, dependencies);
 
