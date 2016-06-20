@@ -30,7 +30,6 @@ auto shell(string cmd) {
 }
 
 Build _getBuild() {
-    enum QUIET = userVars.get("QUIET", "");
 
     // Default to a release built, override with -d BUILD=debug
     enum BUILD = userVars.get("BUILD", "release");
@@ -219,7 +218,7 @@ Build _getBuild() {
 
     // C files to be part of the build
     enum C_MODULES = ["adler32", "compress", "crc32", "deflate", "gzclose", "gzlib",
-                      "gzread", "gzwrite", "infback", "inffast", "inflate", "inftrees", "trees",
+                      "gzread", "gzwrite", "infback", "inffast", "inflate", "inftrees", //"trees",
                       "uncompr", "zutil"].map!(a => "etc/c/zlib/" ~ a);
 
     string[] OBJS(string build = BUILD, string model = MODEL) {
@@ -275,9 +274,9 @@ Build _getBuild() {
         Target[] fat; //nothing to see here
     }
 
-    // the equivalent of all: lib dll
     alias lib = target_LIB;
     alias dll = target_DLL;
+    // the equivalent of all: lib dll
     auto all = SHARED ? [lib, dll] : [lib]; // the Makefile "all" targets
 
     Target druntimeTarget(string build) {
@@ -341,11 +340,12 @@ Build _getBuild() {
 
         auto TIMELIMIT = shell("which timelimit 2>/dev/null || true") != "" ? "timelimit -t 60" : "";
 
+        // target for batch unittests (using shared phobos library and test_runner)
+        enum QUIET = userVars.get("QUIET", "");
         return D_MODULES.
             map!(a => Target.phony("unittest/" ~ a ~ ".run",
                                    QUIET ~ TIMELIMIT ~ " $in " ~ moduleName(a),
                                    [test_runner])).array;
-
     }
 
     auto unittest_debug = Target.phony("unittest-debug", "", createUnitTests("debug"));
