@@ -44,6 +44,13 @@ enum DMDEXTRAFLAGS = userVars.get("DMDEXTRAFLAGS", "");
 version(Windows) enum CC = "dmc";
 else             enum CC = "cc";
 
+version(Windows) enum DOTOBJ = ".obj";
+else             enum DOTOBJ = ".o";
+
+version(linux) enum LINKDL = "-L-ldl";
+else           enum LINKDL = "";
+
+
 // Default to a release built, override with -d BUILD=debug
 enum BUILD = userVars.get("BUILD", "release");
 enum CUSTOM_DRUNTIME = userVars.get("DRUNTIME", "") != "";
@@ -101,12 +108,6 @@ Build _getBuild() {
         flags ~= build == "debug" ? " -g -debug" : " -O -release";
         return flags;
     }
-
-    version(Windows) enum DOTOBJ = ".obj";
-    else             enum DOTOBJ = ".o";
-
-    version(linux) enum LINKDL = "-L-ldl";
-    else           enum LINKDL = "";
 
     // Set LIB, the ultimate target
     version(Windows) {
@@ -278,8 +279,7 @@ Build _getBuild() {
         Target[] fat; //nothing to see here
     }
 
-    //alias lib = target_LIB;
-    alias lib = staticPhobos!(BUILD, MODEL);
+    alias lib = target_LIB;
     alias dll = target_DLL;
     // the equivalent of all: lib dll
     auto all = SHARED ? [lib, dll] : [lib]; // the Makefile "all" targets
@@ -477,7 +477,7 @@ Build _getBuild() {
     auto auto_tester_build = Target.phony("auto-tester-build", "", all ~ checkwhitespace);
     auto auto_tester_test  = Target.phony("auto-tester-test",  "", [unittest_]);
 
-    auto targets = chain(all.map!createTopLevelTarget,
+    auto targets = chain(newTargets,
                          chain(fat,
                                [unittest_, unittest_debug, unittest_release, gitzip, zip, install],
                                [json],
@@ -491,7 +491,7 @@ Build _getBuild() {
 }
 
 auto newTargets() {
-    Target[] all;
+    auto all = [staticPhobos!(BUILD, MODEL), dynamicPhobos!(BUILD, MODEL)];
     auto defaultTargets = all.map!createTopLevelTarget;
     Target[] foo;
     auto optionalTargets = foo.map!optional;
@@ -575,6 +575,9 @@ version(Windows) {
     }
 }
 
+private Target dynamicRuntime(string build, string model) {
+    return Target(dynamicRuntimeFileName(build, model));
+}
 
 private string dflags(string build, string model) {
     auto flags = "-conf= -I" ~ DRUNTIME_PATH ~ "/import " ~ DMDEXTRAFLAGS ~ " -w -dip25 " ~ MODEL_FLAG(model) ~ " " ~ PIC;
@@ -591,17 +594,48 @@ alias cSources = Sources!(Dirs(["etc/c/zlib"]),
 private Target[] cObjs(string build, string model)() {
     enum buildFlag = build == "debug" ? "-g" : "-O3";
     enum flags = ["-c", "-m" ~ model, "-fPIC", "-DHAVE_UNISTD_H", buildFlag].join(" ");
-    auto objs = objectFiles!(cSources,
-                             Flags(flags));
-    import std.conv;
-    import std.stdio;
-    auto newObjs = objs.map!(a => a.expandOutputs("")[0]).array;
-    sort(newObjs);
-    auto oldObjs =  ["adler32", "compress", "crc32", "deflate", "gzclose", "gzlib",
-                     "gzread", "gzwrite", "infback", "inffast", "inflate", "inftrees", "trees",
-                     "uncompr", "zutil"].map!(a => "etc/c/zlib/" ~ a ~ ".o").array;
-    sort(oldObjs);
+    return objectFiles!(cSources, Flags(flags));
+}
 
-    assert(newObjs == oldObjs, text("\n\n", "new: ", newObjs, "\n\n", "old: ", oldObjs, "\n"));
-    return objs;
+
+private Target dynamicPhobos(string build, string model)() {
+    // Set LIB, the ultimate target
+    version(Windows) {
+        assert(0);
+    } else {
+        // 2.064.2 => libphobos2.so.0.64.2
+        // 2.065 => libphobos2.so.0.65.0
+        // MAJOR version is 0 for now, which means the ABI is still unstable
+        enum MAJOR = "0";
+        auto versionParts = readText("../dmd/VERSION").chomp.split(".");
+        import std.conv: to;
+        auto minor = versionParts[1].to!int.to!string;
+        auto patch = versionParts[2].to!int.to!string;
+        // soName doesn't use patch level (ABI compatible)
+        auto soName = inGeneratedDir(build, model, "libphobos2.so." ~ MAJOR ~ "." ~ minor);
+        auto patchName = soName ~ "." ~ patch;
+
+        auto cmd = [DMD, dflags(build, model), "-fPIC", "-shared",
+                    "-debuglib=", "-defaultlib=", "-of$out",
+                    "-L-soname=" ~ soName, LINKDL, "$in"].join(" ");
+        // ALL_D_FILES
+        auto dependencies = cObjs!(build, model) ~ dynamicRuntime(build, model);
+
+        auto phobos = Target(patchName, cmd, dependencies);
+
+        auto fstLink = Target(soName,
+                              "ln -sf " ~ baseName(patchName) ~ " $out",
+                              phobos);
+
+        auto sndLink = Target(inGeneratedDir(build, model, "libphobos2.so"),
+                              "ln -sf " ~ baseName(soName) ~ " $out",
+                              fstLink);
+
+        return sndLink;
+    }
+}
+
+private string inGeneratedDir(string build, string model, string fileName) {
+    import std.path;
+    return buildPath("$project", "generated", OS, build, model, fileName);
 }
