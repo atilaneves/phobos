@@ -29,16 +29,50 @@ auto shell(string cmd) {
     return executeShell(cmd).output.chomp;
 }
 
+
+enum PIC = "PIC" in userVars ? "-fPIC" : "";
+enum INSTALL_DIR = "../install";
+enum DRUNTIME_PATH = "../druntime";
+enum ZIPFILE = "phobos.zip";
+enum ROOT_OF_THEM_ALL = "generated";
+// build with shared library support (default to true on supported platforms)
+enum SHARED = userVars.get("SHARED", ["linux", "freebsd"].canFind(OS) ? true : false);
+enum DMD = "../dmd/src/dmd";
+enum DMDEXTRAFLAGS = userVars.get("DMDEXTRAFLAGS", "");
+
+
+version(Windows) enum CC = "dmc";
+else             enum CC = "cc";
+
+// Default to a release built, override with -d BUILD=debug
+enum BUILD = userVars.get("BUILD", "release");
+enum CUSTOM_DRUNTIME = userVars.get("DRUNTIME", "") != "";
+
+
+// DRUNTIME is a variable in posix.mak
+static if(CUSTOM_DRUNTIME) {
+    string DRUNTIME(string build = BUILD, string model = MODEL) {
+        return userVars["DRUNTIME"];
+    }
+} else {
+    version(Windows)
+        string DRUNTIME(string build = BUILD) { return DRUNTIME_PATH ~ "/lib/druntime.lib"; }
+    else {
+        string DRUNTIME(string build = BUILD, string model = MODEL) {
+            return DRUNTIME_PATH ~ "/generated/" ~ OS ~ "/" ~ build ~ "/" ~ model ~ "/libdruntime.a";
+        }
+    }
+}
+
+version(Windows) {
+    string DRUNTIMESO(string build = BUILD) { return ""; }
+} else {
+    string DRUNTIMESO(string build = BUILD, string model = MODEL) {
+        return stripExtension(DRUNTIME(build, model)) ~ ".so.a";
+    }
+}
+
 Build _getBuild() {
-
-    // Default to a release built, override with -d BUILD=debug
-    enum BUILD = userVars.get("BUILD", "release");
-
-    enum PIC = "PIC" in userVars ? "-fPIC" : "";
-    enum INSTALL_DIR = "../install";
-    enum DRUNTIME_PATH = "../druntime";
-    enum ZIPFILE = "phobos.zip";
-    enum ROOT_OF_THEM_ALL = "generated";
 
     // ROOT is a variable in posix.mak, but is a function here so the build can vary
     string ROOT(string build = BUILD, string model = MODEL) {
@@ -54,35 +88,6 @@ Build _getBuild() {
                    "std.ddoc", "macros.ddoc", ".generated/modlist-prerelease.ddoc"].
         map!(a => DOCSRC ~ "/" ~ a).array;
     enum BIGSTDDOC = ["std_consolidated.ddoc", "macros.ddoc"].map!(a => DOCSRC ~ "/" ~ a).array;
-
-    enum CUSTOM_DRUNTIME = userVars.get("DRUNTIME", "") != "";
-
-    // DRUNTIME is a variable in posix.mak
-    static if(CUSTOM_DRUNTIME) {
-        string DRUNTIME(string build = BUILD, string model = MODEL) {
-            return userVars["DRUNTIME"];
-        }
-    }
-
-    version(Windows) {
-        static if(!CUSTOM_DRUNTIME)
-            string DRUNTIME(string build = BUILD) { return DRUNTIME_PATH ~ "/lib/druntime.lib"; }
-        string DRUNTIMESO(string build = BUILD) { return ""; }
-    } else {
-        static if(!CUSTOM_DRUNTIME) {
-            string DRUNTIME(string build = BUILD, string model = MODEL) {
-                return DRUNTIME_PATH ~ "/generated/" ~ OS ~ "/" ~ build ~ "/" ~ model ~ "/libdruntime.a";
-            }
-        }
-        string DRUNTIMESO(string build = BUILD, string model = MODEL) {
-            return stripExtension(DRUNTIME(build, model)) ~ ".so.a";
-        }
-    }
-
-    enum DMDEXTRAFLAGS = userVars.get("DMDEXTRAFLAGS", "");
-    enum DMD = "../dmd/src/dmd";
-    version(Windows) enum CC = "dmc";
-    else             enum CC = "cc";
 
     enum DDOC = DMD ~ " -conf= " ~ MODEL_FLAG ~ " -w -c -o- -version=StdDdoc -I" ~
         DRUNTIME_PATH ~ "/import " ~ DMDEXTRAFLAGS;
@@ -216,17 +221,16 @@ Build _getBuild() {
         ["std/internal/windows/advapi32.d", "std/windows/registry.d", "std/c/linux/pthread.d",
          "std/c/linux/termios.d", "std/c/linux/tipc.d"];
 
+    assert(ALL_D_FILES.length == 167, ALL_D_FILES.length.to!string);
+
     // C files to be part of the build
     enum C_MODULES = ["adler32", "compress", "crc32", "deflate", "gzclose", "gzlib",
-                      "gzread", "gzwrite", "infback", "inffast", "inflate", "inftrees", //"trees",
+                      "gzread", "gzwrite", "infback", "inffast", "inflate", "inftrees", "trees",
                       "uncompr", "zutil"].map!(a => "etc/c/zlib/" ~ a);
 
     string[] OBJS(string build = BUILD, string model = MODEL) {
         return C_MODULES.map!(a => ROOT(build, model) ~ "/" ~ a ~ DOTOBJ).array;
     }
-
-    // build with shared library support (default to true on supported platforms)
-    enum SHARED = userVars.get("SHARED", ["linux", "freebsd"].canFind(OS) ? true : false);
 
     // Rules begin here
 
@@ -274,13 +278,14 @@ Build _getBuild() {
         Target[] fat; //nothing to see here
     }
 
-    alias lib = target_LIB;
+    //alias lib = target_LIB;
+    alias lib = staticPhobos!(BUILD, MODEL);
     alias dll = target_DLL;
     // the equivalent of all: lib dll
     auto all = SHARED ? [lib, dll] : [lib]; // the Makefile "all" targets
 
     Target druntimeTarget(string build) {
-        if(CUSTOM_DRUNTIME) {
+        static if(CUSTOM_DRUNTIME) {
             // We consider a custom-set DRUNTIME a sign they build druntime themselves
         } else {
             // This rule additionally produces $(DRUNTIMESO). Add a fake dependency
@@ -483,4 +488,120 @@ Build _getBuild() {
                          map!(a => optional(a))).array;
 
     return Build(targets);
+}
+
+auto newTargets() {
+    Target[] all;
+    auto defaultTargets = all.map!createTopLevelTarget;
+    Target[] foo;
+    auto optionalTargets = foo.map!optional;
+    return chain(defaultTargets, optionalTargets);
+}
+
+// Target[] fatLib() {
+//     version(OSX) {
+//         return fatLibMac();
+//     } else {
+//         return []; // nothing to see here
+//     }
+// }
+
+
+// Target fatLibMac() {
+//     // Build fat library that combines the 32 bit and the 64 bit libraries
+//     return Target("libphobos2.a",
+//                    "lipo " ~
+//                    ROOT_OF_THEM_ALL ~ "/osx/release/32/libphobos2.a \\\n" ~
+//                    ROOT_OF_THEM_ALL ~ "/osx/release/64/libphobos2.a \\\n" ~
+//                    "-create -output $out",
+//                    [target_LIB("32"), target_LIB("64")]);
+// }
+
+// DRUNTIME is a variable in posix.mak
+
+
+private Target staticPhobos(string build, string model)() {
+    import std.path;
+
+    version(Windows) {
+        enum fileName = "phobos.lib";
+    } else {
+        enum fileName = "libphobos2.a";
+    }
+
+    auto path = buildPath("$project", "generated", OS, build, model, fileName);
+    auto cmd = [DMD, dflags(build, model), "-lib", "-of$out", "$in"].join(" ");
+    auto dependencies = chain(cObjs!(build, model), [staticRuntime(build, model)]);
+    return Target(path, cmd, dependencies);
+}
+
+private Target staticRuntime(string build, string model) {
+    static if(CUSTOM_DRUNTIME) {
+        return Target(CUSTOM_DRUNTIME);
+        // We consider a custom-set DRUNTIME a sign they build druntime themselves
+    } else {
+        // This rule additionally produces $(DRUNTIMESO). Add a fake dependency
+        // to always invoke druntime's make. Use FORCE instead of .PHONY to
+        // avoid rebuilding phobos when $(DRUNTIME) didn't change.
+        version(FreeBSD) enum make = "gmake";
+        else             enum make = "make";
+        auto command = [make, "-C", DRUNTIME_PATH, "-f", "posix.mak", "MODEL=" ~ model,
+                        "DMD=" ~ DMD, "OS=" ~ OS, "BUILD=" ~ build].join(" ");
+        auto druntime = Target("$project/" ~ staticRuntimeFileName(build, model), command);
+        return SHARED ? Target("$project/" ~ dynamicRuntimeFileName(build, model), command) : druntime;
+    }
+}
+
+static if(CUSTOM_DRUNTIME) {
+    string staticRuntimeFileName(string build, string model) {
+        return userVars["DRUNTIME"];
+    }
+} else {
+    version(Windows)
+        string staticRuntimeFileName(string build, string model) { return DRUNTIME_PATH ~ "/lib/druntime.lib"; }
+    else {
+        string staticRuntimeFileName(string build, string model) {
+            import std.path;
+            return buildPath(DRUNTIME_PATH, "generated", OS, build, model, "libdruntime.a");
+        }
+    }
+}
+
+version(Windows) {
+    string dynamicRuntimeFileName(string build, string model) { return ""; }
+} else {
+    string dynamicRuntimeFileName(string build, string model) {
+        return stripExtension(DRUNTIME(build, model)) ~ ".so.a";
+    }
+}
+
+
+private string dflags(string build, string model) {
+    auto flags = "-conf= -I" ~ DRUNTIME_PATH ~ "/import " ~ DMDEXTRAFLAGS ~ " -w -dip25 " ~ MODEL_FLAG(model) ~ " " ~ PIC;
+    flags ~= build == "debug" ? " -g -debug" : " -O -release";
+    return flags;
+}
+
+// C source files
+alias cSources = Sources!(Dirs(["etc/c/zlib"]),
+                          Files(),
+                          Filter!(a => !a.canFind("example") && !a.canFind("minigzip")));
+
+// C objects, a pattern rule in the original makefile
+private Target[] cObjs(string build, string model)() {
+    enum buildFlag = build == "debug" ? "-g" : "-O3";
+    enum flags = ["-c", "-m" ~ model, "-fPIC", "-DHAVE_UNISTD_H", buildFlag].join(" ");
+    auto objs = objectFiles!(cSources,
+                             Flags(flags));
+    import std.conv;
+    import std.stdio;
+    auto newObjs = objs.map!(a => a.expandOutputs("")[0]).array;
+    sort(newObjs);
+    auto oldObjs =  ["adler32", "compress", "crc32", "deflate", "gzclose", "gzlib",
+                     "gzread", "gzwrite", "infback", "inffast", "inflate", "inftrees", "trees",
+                     "uncompr", "zutil"].map!(a => "etc/c/zlib/" ~ a ~ ".o").array;
+    sort(oldObjs);
+
+    assert(newObjs == oldObjs, text("\n\n", "new: ", newObjs, "\n\n", "old: ", oldObjs, "\n"));
+    return objs;
 }
