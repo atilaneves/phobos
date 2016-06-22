@@ -508,9 +508,8 @@ Build _getBuild() {
 auto newTargets() {
     auto all = chain(staticPhobos!(BUILD, MODEL), [dynamicPhobos!(BUILD, MODEL)]);
     auto defaultTargets = all.map!createTopLevelTarget;
-    Target[] foo;
-    auto optionalTargets = foo.map!optional;
-    return chain(defaultTargets, optionalTargets);
+    auto optionalTargets = unitTests!(BUILD, MODEL);
+    return chain(defaultTargets, optionalTargets.map!optional);
 }
 
 // Target[] fatLib() {
@@ -672,4 +671,35 @@ private Target dynamicPhobos(string build, string model)() {
 private string inGeneratedDir(string build, string model, string fileName) {
     import std.path;
     return buildPath("$project", "generated", OS, build, model, fileName);
+}
+
+
+private Target[] unitTests(string build, string model)() {
+    enum commonFlags = [dflags(build, model), "-unittest"];
+
+    static if(SHARED) {
+        enum compilerFlags = commonFlags ~ "-fPIC";
+    } else {
+        enum compilerFlags = commonFlags;
+    }
+
+    alias dlangObjs = objectFiles!(dSources,
+                                   Flags(compilerFlags.join(" ")));
+    static if (SHARED) {
+        enum path = inGeneratedDir(build, model, buildPath("unittest", "libphobos2-ut.so"));
+        enum command = ([DMD] ~ compilerFlags ~ ["-shared", "-defaultlib=", "-debuglib=", "-of$out", "$in"]).join(" ");
+        auto dependencies = dlangObjs ~ cObjs!(build, model) ~ dynamicRuntime(build, model);
+        auto lib = Target(path, command, dependencies);
+        auto test_runner = Target(buildPath("$project", "generated", OS, build, model, "unittest", "test_runner"),
+                                  [DMD, dflags(build, model), "-defaultlib=", "-debuglib=", "-of$out", "-L" "$in"].join(" "),
+                                  [lib] ~ Target(buildPath(DRUNTIME_PATH, "src", "test_runner.d")));
+    } else {
+        enum path = inGeneratedDir(build, model, buildPath("unittest", "test_runner"));
+        enum command = ([DMD] ~ compilerFlags ~ ["-defaultlib=", "-debuglib=", "-of$out", "$in"]).join(" ");
+        auto dependencies = [Target(buildPath(DRUNTIME_PATH, "src", "test_runner.d"))] ~
+            dlangObjs ~ cObjs!(build, model) ~ staticRuntime(build, model);
+        auto test_runner = Target(path, command, dependencies);
+    }
+
+    return [test_runner];
 }
