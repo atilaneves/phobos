@@ -541,7 +541,7 @@ private Target staticPhobos(string build, string model)() {
         enum fileName = "libphobos2.a";
     }
 
-    auto path = buildPath("$project", "generated", OS, build, model, fileName);
+    auto path = inGeneratedDir(build, model, fileName);
     auto cmd = [DMD, dflags(build, model), "-lib", "-of$out", "$in"].join(" ");
     auto dependencies = chain(cObjs!(build, model),
                               [staticRuntime(build, model)],
