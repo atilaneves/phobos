@@ -544,12 +544,6 @@ private Target[] staticPhobos(string build, string model)() {
         enum fileName = "libphobos2.a";
     }
 
-    // return staticLibrary!(inGeneratedDir(build, model, fileName),
-    //                       dSources,
-    //                       Flags(dflags(build, model)),
-    //                       ImportPaths(),
-    //                       StringImportPaths(),
-    //                       () @safe => cObjs!(build, model) ~ staticRuntime(build, model));
     auto path = inGeneratedDir(build, model, fileName);
     auto cmd = [DMD, dflags(build, model), "-lib", "-of$out", "$in"].join(" ");
     auto dependencies = chain(cObjs!(build, model),
@@ -557,18 +551,6 @@ private Target[] staticPhobos(string build, string model)() {
                               sourcesToTargets!dSources);
     return [Target(path, cmd, dependencies)];
 }
-
-// C source files
-alias c_and_d_Sources = Sources!(Dirs(["std", "etc"]),
-                                 Files(),
-                                 Filter!(a =>
-                                         (a.extension == ".c" &&
-                                         !a.canFind("etc/c/zlip/example") &&
-                                          !a.canFind("etc/c/zlib/minigzip"))
-                                         ||
-                                         (a.extension == ".d" &&
-                                         !a.canFind("linuxextern") &&
-                                          !a.canFind("test/uda.d"))));
 
 // D source files
 alias dSources = Sources!(["std", "etc"],
