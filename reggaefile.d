@@ -675,30 +675,29 @@ private string inGeneratedDir(string build, string model, string fileName) {
 
 
 private Target[] unitTests(string build, string model)() {
-    enum commonFlags = [dflags(build, model), "-unittest"];
+    enum commonFlags = [dflags(build, model), "-defaultlib=", "-debuglib=", "-unittest"];
 
     static if(SHARED) {
-        enum compilerFlags = commonFlags ~ "-fPIC";
+        enum compilerFlags = commonFlags ~ "-fPIC" ~ "-shared";
     } else {
         enum compilerFlags = commonFlags;
     }
 
     alias dlangObjs = objectFiles!(dSources,
                                    Flags(compilerFlags.join(" ")));
+    enum testRunnerBin = inGeneratedDir(build, model, buildPath("unittest", "test_runner"));
+    enum testRunnerSrc = Target(buildPath(DRUNTIME_PATH, "src", "test_runner.d"));
+    enum compilerCommand = ([DMD] ~ compilerFlags ~ ["-of$out", "$in"]).join(" ");
+    auto dependencies = dlangObjs ~ cObjs!(build, model) ~ staticRuntime(build, model);
+
     static if (SHARED) {
         enum path = inGeneratedDir(build, model, buildPath("unittest", "libphobos2-ut.so"));
-        enum command = ([DMD] ~ compilerFlags ~ ["-shared", "-defaultlib=", "-debuglib=", "-of$out", "$in"]).join(" ");
-        auto dependencies = dlangObjs ~ cObjs!(build, model) ~ dynamicRuntime(build, model);
-        auto lib = Target(path, command, dependencies);
-        auto test_runner = Target(buildPath("$project", "generated", OS, build, model, "unittest", "test_runner"),
+        auto lib = Target(path, compilerCommand, dependencies);
+        auto test_runner = Target(testRunnerBin,
                                   [DMD, dflags(build, model), "-defaultlib=", "-debuglib=", "-of$out", "-L" "$in"].join(" "),
-                                  [lib] ~ Target(buildPath(DRUNTIME_PATH, "src", "test_runner.d")));
+                                  [lib] ~ testRunnerSrc);
     } else {
-        enum path = inGeneratedDir(build, model, buildPath("unittest", "test_runner"));
-        enum command = ([DMD] ~ compilerFlags ~ ["-defaultlib=", "-debuglib=", "-of$out", "$in"]).join(" ");
-        auto dependencies = [Target(buildPath(DRUNTIME_PATH, "src", "test_runner.d"))] ~
-            dlangObjs ~ cObjs!(build, model) ~ staticRuntime(build, model);
-        auto test_runner = Target(path, command, dependencies);
+        auto test_runner = Target(testRunnerBin, compilerCommand, [testRunnerSrc] ~ dependencies);
     }
 
     return [test_runner];
