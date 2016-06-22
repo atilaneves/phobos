@@ -560,9 +560,14 @@ private Target staticRuntime(string build, string model) {
         version(FreeBSD) enum make = "gmake";
         else             enum make = "make";
         auto command = [make, "-C", DRUNTIME_PATH, "-f", "posix.mak", "MODEL=" ~ model,
-                        "DMD=" ~ DMD, "OS=" ~ OS, "BUILD=" ~ build].join(" ");
-        auto druntime = Target("$project/" ~ staticRuntimeFileName(build, model), command);
-        return SHARED ? Target("$project/" ~ dynamicRuntimeFileName(build, model), command) : druntime;
+                        "DMD=" ~ DMD, "OS=" ~ OS, "BUILD=" ~ build].join(" ") ~
+            "  # FORCE phony druntime build";
+        auto druntime = Target("$project/" ~ staticRuntimeFileName(build, model),
+                               command);
+        return SHARED
+            ? Target("$project/" ~ dynamicRuntimeFileName(build, model),
+                     command)
+            : druntime;
     }
 }
 
