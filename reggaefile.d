@@ -58,14 +58,14 @@ enum CUSTOM_DRUNTIME = userVars.get("DRUNTIME", "") != "";
 
 // DRUNTIME is a variable in posix.mak
 static if(CUSTOM_DRUNTIME) {
-    string DRUNTIME(string build = BUILD, string model = MODEL) {
+    string DRUNTIME(string build = BUILD, string model = MODEL) @safe {
         return userVars["DRUNTIME"];
     }
 } else {
     version(Windows)
-        string DRUNTIME(string build = BUILD) { return DRUNTIME_PATH ~ "/lib/druntime.lib"; }
+        string DRUNTIME(string build = BUILD) @safe { return DRUNTIME_PATH ~ "/lib/druntime.lib"; }
     else {
-        string DRUNTIME(string build = BUILD, string model = MODEL) {
+        string DRUNTIME(string build = BUILD, string model = MODEL) @safe {
             return DRUNTIME_PATH ~ "/generated/" ~ OS ~ "/" ~ build ~ "/" ~ model ~ "/libdruntime.a";
         }
     }
@@ -80,6 +80,9 @@ version(Windows) {
 }
 
 Build _getBuild() {
+    defaultOptions.cCompiler = CC;
+    defaultOptions.dCompiler = DMD;
+
 
     // ROOT is a variable in posix.mak, but is a function here so the build can vary
     string ROOT(string build = BUILD, string model = MODEL) {
@@ -503,7 +506,7 @@ Build _getBuild() {
 }
 
 auto newTargets() {
-    auto all = [staticPhobos!(BUILD, MODEL), dynamicPhobos!(BUILD, MODEL)];
+    auto all = chain(staticPhobos!(BUILD, MODEL), [dynamicPhobos!(BUILD, MODEL)]);
     auto defaultTargets = all.map!createTopLevelTarget;
     Target[] foo;
     auto optionalTargets = foo.map!optional;
@@ -532,7 +535,7 @@ auto newTargets() {
 // DRUNTIME is a variable in posix.mak
 
 
-private Target staticPhobos(string build, string model)() {
+private Target[] staticPhobos(string build, string model)() {
     import std.path;
 
     version(Windows) {
@@ -541,15 +544,39 @@ private Target staticPhobos(string build, string model)() {
         enum fileName = "libphobos2.a";
     }
 
+    // return staticLibrary!(inGeneratedDir(build, model, fileName),
+    //                       dSources,
+    //                       Flags(dflags(build, model)),
+    //                       ImportPaths(),
+    //                       StringImportPaths(),
+    //                       () @safe => cObjs!(build, model) ~ staticRuntime(build, model));
     auto path = inGeneratedDir(build, model, fileName);
     auto cmd = [DMD, dflags(build, model), "-lib", "-of$out", "$in"].join(" ");
     auto dependencies = chain(cObjs!(build, model),
                               [staticRuntime(build, model)],
                               sourcesToTargets!dSources);
-    return Target(path, cmd, dependencies);
+    return [Target(path, cmd, dependencies)];
 }
 
-private Target staticRuntime(string build, string model) {
+// C source files
+alias c_and_d_Sources = Sources!(Dirs(["std", "etc"]),
+                                 Files(),
+                                 Filter!(a =>
+                                         (a.extension == ".c" &&
+                                         !a.canFind("etc/c/zlip/example") &&
+                                          !a.canFind("etc/c/zlib/minigzip"))
+                                         ||
+                                         (a.extension == ".d" &&
+                                         !a.canFind("linuxextern") &&
+                                          !a.canFind("test/uda.d"))));
+
+// D source files
+alias dSources = Sources!(["std", "etc"],
+                          Files(),
+                          Filter!(a => a.extension == ".d" && !a.canFind("linuxextern") && !a.canFind("test/uda.d")));
+
+
+private Target staticRuntime(string build, string model) @safe {
     static if(CUSTOM_DRUNTIME) {
         return Target(CUSTOM_DRUNTIME);
         // We consider a custom-set DRUNTIME a sign they build druntime themselves
@@ -572,14 +599,14 @@ private Target staticRuntime(string build, string model) {
 }
 
 static if(CUSTOM_DRUNTIME) {
-    string staticRuntimeFileName(string build, string model) {
+    string staticRuntimeFileName(string build, string model) @safe {
         return userVars["DRUNTIME"];
     }
 } else {
     version(Windows)
-        string staticRuntimeFileName(string build, string model) { return DRUNTIME_PATH ~ "/lib/druntime.lib"; }
+        string staticRuntimeFileName(string build, string model) @safe { return DRUNTIME_PATH ~ "/lib/druntime.lib"; }
     else {
-        string staticRuntimeFileName(string build, string model) {
+        string staticRuntimeFileName(string build, string model) @safe {
             import std.path;
             return buildPath(DRUNTIME_PATH, "generated", OS, build, model, "libdruntime.a");
         }
@@ -587,9 +614,9 @@ static if(CUSTOM_DRUNTIME) {
 }
 
 version(Windows) {
-    string dynamicRuntimeFileName(string build, string model) { return ""; }
+    string dynamicRuntimeFileName(string build, string model) @safe { return ""; }
 } else {
-    string dynamicRuntimeFileName(string build, string model) {
+    string dynamicRuntimeFileName(string build, string model) @safe {
         return stripExtension(DRUNTIME(build, model)) ~ ".so.a";
     }
 }
@@ -603,11 +630,6 @@ private string dflags(string build, string model) {
     flags ~= build == "debug" ? " -g -debug" : " -O -release";
     return flags;
 }
-
-// D source files
-alias dSources = Sources!(["std", "etc"],
-                          Files(),
-                          Filter!(a => a.extension == ".d" && !a.canFind("linuxextern") && !a.canFind("test/uda.d")));
 
 // C source files
 alias cSources = Sources!(Dirs(["etc/c/zlib"]),
