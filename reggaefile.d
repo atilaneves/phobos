@@ -548,7 +548,7 @@ private Target[] staticPhobos(string build, string model)() {
     auto cmd = [DMD, dflags(build, model), "-lib", "-of$out", "$in"].join(" ");
     auto dependencies = chain(cObjs!(build, model),
                               [staticRuntime(build, model)],
-                              sourcesToTargets!dSources);
+                              dSourcesTargets);
     return [Target(path, cmd, dependencies)];
 }
 
@@ -556,6 +556,10 @@ private Target[] staticPhobos(string build, string model)() {
 alias dSources = Sources!(["std", "etc"],
                           Files(),
                           Filter!(a => a.extension == ".d" && !a.canFind("linuxextern") && !a.canFind("test/uda.d")));
+
+auto dSourcesTargets() {
+    return sourcesToTargets!dSources;
+}
 
 
 private Target staticRuntime(string build, string model) @safe {
@@ -649,7 +653,7 @@ private Target dynamicPhobos(string build, string model)() {
 
         auto dependencies = chain(cObjs!(build, model),
                                   [dynamicRuntime(build, model)],
-                                  sourcesToTargets!dSources);
+                                  dSourcesTargets);
 
         auto phobos = Target(patchName, cmd, dependencies);
 
