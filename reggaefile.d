@@ -546,7 +546,7 @@ private Target[] staticPhobos(string build, string model)() {
     auto path = inGeneratedDir(build, model, fileName);
     auto cmd = [DMD, dflags(build, model), "-lib", "-of$out", "$in"].join(" ");
     auto dependencies = chain(cObjs!(build, model),
-                              [staticRuntime(build, model)],
+                              [runtime(build, model)],
                               dSourcesTargets);
     return [Target(path, cmd, dependencies)];
 }
@@ -561,7 +561,7 @@ auto dSourcesTargets() {
 }
 
 
-private Target staticRuntime(string build, string model) @safe {
+private Target runtime(string build, string model) @safe {
     static if(CUSTOM_DRUNTIME) {
         return Target(CUSTOM_DRUNTIME);
         // We consider a custom-set DRUNTIME a sign they build druntime themselves
@@ -688,15 +688,17 @@ private Target[] unitTests(string build, string model)() {
     enum testRunnerBin = inGeneratedDir(build, model, buildPath("unittest", "test_runner"));
     enum testRunnerSrc = Target(buildPath(DRUNTIME_PATH, "src", "test_runner.d"));
     enum compilerCommand = ([DMD] ~ compilerFlags ~ ["-of$out", "$in"]).join(" ");
-    auto dependencies = dlangObjs ~ cObjs!(build, model) ~ staticRuntime(build, model);
+    auto dependencies = dlangObjs ~ cObjs!(build, model) ~ runtime(build, model);
 
     static if (SHARED) {
-        enum path = inGeneratedDir(build, model, buildPath("unittest", "libphobos2-ut.so"));
-        auto lib = Target(path, compilerCommand, dependencies);
+        // build shared unittest phobos library then link test_runner to it
+        enum libPath = inGeneratedDir(build, model, buildPath("unittest", "libphobos2-ut.so"));
+        auto lib = Target(libPath, compilerCommand, dependencies);
         auto test_runner = Target(testRunnerBin,
                                   [DMD, dflags(build, model), "-defaultlib=", "-debuglib=", "-of$out", "-L" "$in"].join(" "),
                                   [lib] ~ testRunnerSrc);
     } else {
+        // compile everything at once
         auto test_runner = Target(testRunnerBin, compilerCommand, [testRunnerSrc] ~ dependencies);
     }
 
