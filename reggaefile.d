@@ -33,7 +33,6 @@ auto shell(string cmd) {
 enum PIC = "PIC" in userVars ? "-fPIC" : "";
 enum INSTALL_DIR = "../install";
 enum DRUNTIME_PATH = "../druntime";
-enum ZIPFILE = "phobos.zip";
 enum ROOT_OF_THEM_ALL = "generated";
 // build with shared library support (default to true on supported platforms)
 enum SHARED = userVars.get("SHARED", ["linux", "freebsd"].canFind(OS) ? true : false);
@@ -403,6 +402,7 @@ Build _getBuild() {
     }
 
     // More stuff
+    enum ZIPFILE = "phobos.zip";
     auto gitzip = Target.phony("gitzip", "git archive --format=zip HEAD > " ~ ZIPFILE);
     auto zip = Target.phony("zip", "rm -f " ~ ZIPFILE ~ "; zip -r " ~ ZIPFILE ~ " . -x .git\\* -x generated\\*");
 
@@ -494,7 +494,7 @@ Build _getBuild() {
 
     auto targets = chain(newTargets,
                          chain(fat,
-                               [gitzip, zip, install],
+                               [install],
                                [json],
                                [html], htmls,
                                [allmod, rsync_prerelease, html_consolidated, changelog_html],
@@ -515,7 +515,8 @@ private auto defaultTargets() {
 }
 
 private auto optionalTargets() {
-    return unitTestTargets.map!optional;
+    return chain(unitTestTargets, zipTargets)
+        .map!optional;
 }
 
 private auto unitTestTargets() {
@@ -530,6 +531,14 @@ private auto unitTestTargets() {
     auto unittest_ = Target.phony("unittest", "", unitTestDependencies);
 
     return [unittest_, unittest_debug, unittest_release];
+}
+
+private auto zipTargets() {
+    // More stuff
+    enum ZIPFILE = "phobos.zip";
+    auto gitzip = Target.phony("gitzip", "git archive --format=zip HEAD > " ~ ZIPFILE);
+    auto zip = Target.phony("zip", "rm -f " ~ ZIPFILE ~ "; zip -r " ~ ZIPFILE ~ " . -x .git\\* -x generated\\*");
+    return [gitzip, zip];
 }
 
 // Target[] fatLib() {
