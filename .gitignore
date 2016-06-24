@@ -23,6 +23,7 @@ build
 reggae/bin
 reggae/dmd.zip
 reggae/dmd2
-hello.o
+hello_dynamic.o
+hello_static.o
 hello_static
 hello_dynamic

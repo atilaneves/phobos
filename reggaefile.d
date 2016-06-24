@@ -505,17 +505,31 @@ Build _getBuild() {
     return Build(targets);
 }
 
-auto newTargets() {
-    auto all = chain(staticPhobos!(BUILD, MODEL), [dynamicPhobos!(BUILD, MODEL)]);
-    auto defaultTargets = all.map!createTopLevelTarget;
+private auto newTargets() {
+    return chain(defaultTargets, optionalTargets);
+}
 
+private auto defaultTargets() {
+    auto all = chain(staticPhobos!(BUILD, MODEL), dynamicPhobos!(BUILD, MODEL));
+    return all.map!createTopLevelTarget;
+}
+
+private auto optionalTargets() {
+    return unitTestTargets.map!optional;
+}
+
+private auto unitTestTargets() {
     auto unittest_debug = Target.phony("unittest-debug", "", unitTests!("debug", MODEL));
     auto unittest_release = Target.phony("unittest-release", "", unitTests!("release", MODEL));
-    auto unittest_ = Target.phony("unittest", "", [unittest_debug, unittest_release]);
 
-    auto optionalTargets = [unittest_, unittest_debug, unittest_release];
+    static if("BUILD" in userVars) // BUILD_WAS_SPECIFIED
+        auto unitTestDependencies = unitTests!(BUILD);
+    else
+        auto unitTestDependencies = [unittest_debug, unittest_release];
 
-    return chain(defaultTargets, optionalTargets.map!optional);
+    auto unittest_ = Target.phony("unittest", "", unitTestDependencies);
+
+    return [unittest_, unittest_debug, unittest_release];
 }
 
 // Target[] fatLib() {
@@ -629,7 +643,7 @@ private Target[] cObjs(string build, string model)() {
 }
 
 
-private Target dynamicPhobos(string build, string model)() {
+private Target[] dynamicPhobos(string build, string model)() {
     // Set LIB, the ultimate target
     version(Windows) {
         assert(0);
@@ -664,7 +678,7 @@ private Target dynamicPhobos(string build, string model)() {
                               "ln -sf " ~ baseName(soName) ~ " $out",
                               fstLink);
 
-        return sndLink;
+        return [sndLink];
     }
 }
 
