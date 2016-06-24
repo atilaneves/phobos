@@ -231,7 +231,7 @@ Build _getBuild() {
         ["std/internal/windows/advapi32.d", "std/windows/registry.d", "std/c/linux/pthread.d",
          "std/c/linux/termios.d", "std/c/linux/tipc.d"].array;
     sort(oldAllDFiles);
-    auto newAllDFiles = objectFiles!(dSources).map!(a => a.dependenciesInProjectPath("")).join;
+    auto newAllDFiles = objectFiles!(allDSources).map!(a => a.dependenciesInProjectPath("")).join;
     sort(newAllDFiles);
     import std.conv;
     assert(oldAllDFiles == newAllDFiles, text("\n\nold:\n", oldAllDFiles, "\n\nnew:\n", newAllDFiles, "\n"));
@@ -494,7 +494,7 @@ Build _getBuild() {
 
     auto targets = chain(newTargets,
                          chain(fat,
-                               [unittest_, unittest_debug, unittest_release, gitzip, zip, install],
+                               [gitzip, zip, install],
                                [json],
                                [html], htmls,
                                [allmod, rsync_prerelease, html_consolidated, changelog_html],
@@ -509,8 +509,8 @@ auto newTargets() {
     auto all = chain(staticPhobos!(BUILD, MODEL), [dynamicPhobos!(BUILD, MODEL)]);
     auto defaultTargets = all.map!createTopLevelTarget;
 
-    auto unittest_debug = Target.phony("unittest-debug", "", testRunner!("debug", MODEL));
-    auto unittest_release = Target.phony("unittest-release", "", testRunner!("release", MODEL));
+    auto unittest_debug = Target.phony("unittest-debug", "", unitTests!("debug", MODEL));
+    auto unittest_release = Target.phony("unittest-release", "", unitTests!("release", MODEL));
     auto unittest_ = Target.phony("unittest", "", [unittest_debug, unittest_release]);
 
     auto optionalTargets = [unittest_, unittest_debug, unittest_release];
@@ -553,17 +553,17 @@ private Target[] staticPhobos(string build, string model)() {
     auto cmd = [DMD, dflags(build, model), "-lib", "-of$out", "$in"].join(" ");
     auto dependencies = chain(cObjs!(build, model),
                               [runtime(build, model)],
-                              dSourcesTargets);
+                              allDSourcesTargets);
     return [Target(path, cmd, dependencies)];
 }
 
 // D source files
-alias dSources = Sources!(["std", "etc"],
+alias allDSources = Sources!(["std", "etc"],
                           Files(),
                           Filter!(a => a.extension == ".d" && !a.canFind("linuxextern") && !a.canFind("test/uda.d")));
 
-auto dSourcesTargets() {
-    return sourcesToTargets!dSources;
+auto allDSourcesTargets() {
+    return sourcesToTargets!allDSources;
 }
 
 
@@ -652,7 +652,7 @@ private Target dynamicPhobos(string build, string model)() {
 
         auto dependencies = chain(cObjs!(build, model),
                                   [runtime(build, model)],
-                                  dSourcesTargets);
+                                  allDSourcesTargets);
 
         auto phobos = Target(patchName, cmd, dependencies);
 
@@ -674,16 +674,15 @@ private string inGeneratedDir(string build, string model, string fileName) {
 }
 
 
-private Target[] testRunner(string build, string model)() {
+private Target[] unitTests(string build, string model)() {
     enum commonFlags = [dflags(build, model), "-defaultlib=", "-debuglib=", "-unittest"];
 
-    static if(SHARED) {
+    static if(SHARED)
         enum compilerFlags = commonFlags ~ "-fPIC" ~ "-shared";
-    } else {
+     else
         enum compilerFlags = commonFlags;
-    }
 
-    alias dlangObjs = objectFiles!(dSources,
+    alias dlangObjs = objectFiles!(allDSources,
                                    Flags(compilerFlags.join(" ")));
     enum testRunnerBin = inGeneratedDir(build, model, buildPath("unittest", "test_runner"));
     enum testRunnerSrc = Target(buildPath(DRUNTIME_PATH, "src", "test_runner.d"));
@@ -691,16 +690,32 @@ private Target[] testRunner(string build, string model)() {
     auto dependencies = dlangObjs ~ cObjs!(build, model) ~ runtime(build, model);
 
     static if (SHARED) {
-        // build shared unittest phobos library then link test_runner to it
+        // build shared unittest phobos library first
         enum libPath = inGeneratedDir(build, model, buildPath("unittest", "libphobos2-ut.so"));
         auto lib = Target(libPath, compilerCommand, dependencies);
+        // build test_runner and link it to dynamic unittest phobos
         auto test_runner = Target(testRunnerBin,
                                   [DMD, dflags(build, model), "-defaultlib=", "-debuglib=", "-of$out", "-L" "$in"].join(" "),
                                   [lib] ~ testRunnerSrc);
     } else {
-        // compile everything at once
+        // compile everything at once in unittest mode
         auto test_runner = Target(testRunnerBin, compilerCommand, [testRunnerSrc] ~ dependencies);
     }
 
-    return [test_runner];
+    auto dModules = dlangObjs
+        .map!(a => a.dependenciesInProjectPath(""))
+        .join
+        .map!relativePath
+        .map!(a => a.replace("/", "."))
+        .map!stripExtension
+        ;
+
+    enum QUIET = userVars.get("QUIET", "");
+    auto TIMELIMIT = shell("which timelimit 2>/dev/null || true") != "" ? "timelimit -t 60" : "";
+    return dModules
+        .map!(a => Target.phony("unittest/" ~ a ~ ".run",
+                                QUIET ~ TIMELIMIT ~ " $in " ~ a,
+                                [test_runner]))
+        .array
+        ;
 }
