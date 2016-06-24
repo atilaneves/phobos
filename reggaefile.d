@@ -508,7 +508,7 @@ Build _getBuild() {
 auto newTargets() {
     auto all = chain(staticPhobos!(BUILD, MODEL), [dynamicPhobos!(BUILD, MODEL)]);
     auto defaultTargets = all.map!createTopLevelTarget;
-    auto optionalTargets = unitTests!(BUILD, MODEL);
+    auto optionalTargets = unitTest!(BUILD, MODEL);
     return chain(defaultTargets, optionalTargets.map!optional);
 }
 
@@ -583,31 +583,25 @@ private Target runtime(string build, string model) @safe {
     }
 }
 
-static if(CUSTOM_DRUNTIME) {
-    string staticRuntimeFileName(string build, string model) @safe {
+private string staticRuntimeFileName(string build, string model) @safe {
+    static if(CUSTOM_DRUNTIME) {
         return userVars["DRUNTIME"];
-    }
-} else {
-    version(Windows)
-        string staticRuntimeFileName(string build, string model) @safe { return DRUNTIME_PATH ~ "/lib/druntime.lib"; }
-    else {
-        string staticRuntimeFileName(string build, string model) @safe {
+    } else {
+        version(Windows)
+            return DRUNTIME_PATH ~ "/lib/druntime.lib";
+        else {
             import std.path;
             return buildPath(DRUNTIME_PATH, "generated", OS, build, model, "libdruntime.a");
         }
     }
+
 }
 
-version(Windows) {
-    string dynamicRuntimeFileName(string build, string model) @safe { return ""; }
-} else {
-    string dynamicRuntimeFileName(string build, string model) @safe {
+private string dynamicRuntimeFileName(string build, string model) @safe {
+    version(Windows)
+        return "";
+    else
         return stripExtension(DRUNTIME(build, model)) ~ ".so.a";
-    }
-}
-
-private Target dynamicRuntime(string build, string model) {
-    return Target(dynamicRuntimeFileName(build, model));
 }
 
 private string dflags(string build, string model) {
@@ -651,7 +645,7 @@ private Target dynamicPhobos(string build, string model)() {
                     "-L-soname=" ~ soName, LINKDL, "$in"].join(" ");
 
         auto dependencies = chain(cObjs!(build, model),
-                                  [dynamicRuntime(build, model)],
+                                  [runtime(build, model)],
                                   dSourcesTargets);
 
         auto phobos = Target(patchName, cmd, dependencies);
@@ -674,7 +668,7 @@ private string inGeneratedDir(string build, string model, string fileName) {
 }
 
 
-private Target[] unitTests(string build, string model)() {
+private Target[] unitTest(string build, string model)() {
     enum commonFlags = [dflags(build, model), "-defaultlib=", "-debuglib=", "-unittest"];
 
     static if(SHARED) {
