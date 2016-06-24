@@ -493,9 +493,7 @@ Build _getBuild() {
     auto auto_tester_test  = Target.phony("auto-tester-test",  "", [unittest_]);
 
     auto targets = chain(newTargets,
-                         chain(fat,
-                               [install],
-                               [json],
+                         chain([json],
                                [html], htmls,
                                [allmod, rsync_prerelease, html_consolidated, changelog_html],
                                [checkwhitespace, auto_tester_build, auto_tester_test],
@@ -515,7 +513,7 @@ private auto defaultTargets() {
 }
 
 private auto optionalTargets() {
-    return chain(unitTestTargets, zipTargets, installTargets)
+    return chain(unitTestTargets, zipTargets, installTargets, fatTargets)
         .map!optional;
 }
 
@@ -566,27 +564,21 @@ private auto installTargets() {
     return [install];
 }
 
-// Target[] fatLib() {
-//     version(OSX) {
-//         return fatLibMac();
-//     } else {
-//         return []; // nothing to see here
-//     }
-// }
+private Target[] fatTargets() {
+    version(OSX) {
+        // Build fat library that combines the 32 bit and the 64 bit libraries
+        auto fat = [
+            Target("libphobos2.a",
+                   "lipo $in -create -output $out" ~
+                   [Target(inGeneratedDir("release", "32", libphobos2.a)),
+                    Target(inGeneratedDir("release", "64", libphobos2.a))])
+        ];
+    } else {
+        Target[] fat; //nothing to see here
+    }
 
-
-// Target fatLibMac() {
-//     // Build fat library that combines the 32 bit and the 64 bit libraries
-//     return Target("libphobos2.a",
-//                    "lipo " ~
-//                    ROOT_OF_THEM_ALL ~ "/osx/release/32/libphobos2.a \\\n" ~
-//                    ROOT_OF_THEM_ALL ~ "/osx/release/64/libphobos2.a \\\n" ~
-//                    "-create -output $out",
-//                    [target_LIB("32"), target_LIB("64")]);
-// }
-
-// DRUNTIME is a variable in posix.mak
-
+    return fat;
+}
 
 private Target[] staticPhobos(string build, string model)() {
     import std.path;
