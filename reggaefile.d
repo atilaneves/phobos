@@ -515,7 +515,7 @@ private auto defaultTargets() {
 }
 
 private auto optionalTargets() {
-    return chain(unitTestTargets, zipTargets)
+    return chain(unitTestTargets, zipTargets, installTargets)
         .map!optional;
 }
 
@@ -539,6 +539,31 @@ private auto zipTargets() {
     auto gitzip = Target.phony("gitzip", "git archive --format=zip HEAD > " ~ ZIPFILE);
     auto zip = Target.phony("zip", "rm -f " ~ ZIPFILE ~ "; zip -r " ~ ZIPFILE ~ " . -x .git\\* -x generated\\*");
     return [gitzip, zip];
+}
+
+private auto installTargets() {
+    version(OSX) enum lib_dir = "lib" ~ MODEL;
+    else         enum lib_dir = "lib";
+
+    auto LIB = staticPhobos!(BUILD, MODEL)[0].expandOutputs("")[0];
+    auto installCommonCmd = "mkdir -p " ~ [INSTALL_DIR, OS, lib_dir].join("/") ~ "; " ~
+        "cp " ~ LIB ~ " " ~ [INSTALL_DIR, OS, lib_dir].join("/") ~ "/; ";
+    static if(SHARED) {
+        auto LIBSO = dynamicPhobos!(BUILD, MODEL)[0].expandOutputs("")[0];
+        auto install = Target.phony("install",
+                                    installCommonCmd ~
+                                    "cp -P " ~ LIBSO ~ " " ~ [INSTALL_DIR, OS, lib_dir].join("/") ~ "/; " ~
+                                    "ln -sf " ~ baseName(LIBSO) ~ [INSTALL_DIR, OS, lib_dir, "libphobos2.so"].join("/"));
+    }
+    else
+        auto install = Target.phony("install",
+                                    installCommonCmd ~
+                                    "mkdir -p " ~ INSTALL_DIR ~ "/src/phobos/etc; " ~
+                                    "mkdir -p " ~ INSTALL_DIR ~ "/src/phobos/std; " ~
+                                    "cp -r std/* " ~ INSTALL_DIR ~ "/src/phobos/std; " ~
+                                    "cp -r etc/* " ~ INSTALL_DIR ~ "/src/phobos/etc; " ~
+                                    "cp LICENSE_1_0.TXT " ~ INSTALL_DIR ~ "/phobos-LICENSE.txt");
+    return [install];
 }
 
 // Target[] fatLib() {
