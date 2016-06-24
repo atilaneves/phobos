@@ -214,6 +214,10 @@ Build _getBuild() {
 
     // Aggregate all D modules relevant to this build
     auto D_MODULES = STD_MODULES ~ EXTRA_MODULES;
+    auto oldDModules = D_MODULES.dup;
+    auto newDModules = objectFiles!allDSources.map!(a => a.dependenciesInProjectPath("")).join;
+    sort(oldDModules);
+    sort(newDModules);
 
     // Add the .d suffix to the module names
     auto D_FILES = D_MODULES.map!(a => a ~ ".d").array;
@@ -602,6 +606,16 @@ alias allDSources = Sources!(["std", "etc"],
                           Files(),
                           Filter!(a => a.extension == ".d" && !a.canFind("linuxextern") && !a.canFind("test/uda.d")));
 
+// the only difference between ALL_D_FILES (allDSources here) and D_MODULES (dSources)
+// is the removal of the FreeBSD and OSX socket modules
+alias dSources = Sources!(["std", "etc"],
+                          Files(),
+                          Filter!(a => a.extension == ".d"
+                              && !a.canFind("linuxextern")
+                              && !a.canFind("test/uda.d")
+                              && !a.canFind("std/c/freebsd/socket")
+                              && !a.canFind("std/c/osx/socket")));
+
 auto allDSourcesTargets() {
     return sourcesToTargets!allDSources;
 }
@@ -722,7 +736,7 @@ private Target[] unitTests(string build, string model)() {
      else
         enum compilerFlags = commonFlags;
 
-    alias dlangObjs = objectFiles!(allDSources,
+    alias dlangObjs = objectFiles!(dSources,
                                    Flags(compilerFlags.join(" ")));
     enum testRunnerBin = inGeneratedDir(build, model, buildPath("unittest", "test_runner"));
     enum testRunnerSrc = Target(buildPath(DRUNTIME_PATH, "src", "test_runner.d"));
