@@ -508,7 +508,13 @@ Build _getBuild() {
 auto newTargets() {
     auto all = chain(staticPhobos!(BUILD, MODEL), [dynamicPhobos!(BUILD, MODEL)]);
     auto defaultTargets = all.map!createTopLevelTarget;
-    auto optionalTargets = unitTest!(BUILD, MODEL);
+
+    auto unittest_debug = Target.phony("unittest-debug", "", testRunner!("debug", MODEL));
+    auto unittest_release = Target.phony("unittest-release", "", testRunner!("release", MODEL));
+    auto unittest_ = Target.phony("unittest", "", [unittest_debug, unittest_release]);
+
+    auto optionalTargets = [unittest_, unittest_debug, unittest_release];
+
     return chain(defaultTargets, optionalTargets.map!optional);
 }
 
@@ -668,7 +674,7 @@ private string inGeneratedDir(string build, string model, string fileName) {
 }
 
 
-private Target[] unitTest(string build, string model)() {
+private Target[] testRunner(string build, string model)() {
     enum commonFlags = [dflags(build, model), "-defaultlib=", "-debuglib=", "-unittest"];
 
     static if(SHARED) {

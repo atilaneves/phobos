@@ -24,4 +24,5 @@ reggae/bin
 reggae/dmd.zip
 reggae/dmd2
 hello.o
-hello
+hello_static
+hello_dynamic
