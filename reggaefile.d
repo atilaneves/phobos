@@ -201,6 +201,16 @@ Build _getBuild() {
     auto SRC_DOCUMENTABLES = userVars.get("SRC_DOCUMENTABLES",
                                           ["index.d"] ~ STD_MODULES.map!(a => a ~ ".d").array ~ EXTRA_DOCUMENTABLES);
 
+    assert(sourceDocumentables.array.length == SRC_DOCUMENTABLES.length, sourceDocumentables.array.length.to!string);
+
+
+    import std.conv: text;
+    auto old_ = SRC_DOCUMENTABLES.map!(a => a.stripExtension).array;
+    auto new_ = sourceDocumentables.map!(a => a.stripExtension).array;
+    sort(old_);
+    sort(new_);
+    assert(old_ == new_, text("\n\n", old_, "\n\n", new_));
+
 
     enum EXTRA_MODULES_INTERNAL = ["std/internal/digest/sha_SSSE3"] ~
         ["biguintcore", "biguintnoasm", "biguintx86", "gammafunction", "errorfunction"].map!(a => "std/internal/math/" ~ a).array ~
@@ -792,4 +802,27 @@ private Target[] unitTests(string build, string model)() {
                                 [test_runner]))
         .array
         ;
+}
+
+
+auto sourceDocumentables() {
+
+    return chain(["index.d"],
+                 ["std/regex/internal/backtracking",
+                  "std/regex/internal/generator",
+                  "std/regex/internal/ir",
+                  "std/regex/internal/kickstart",
+                  "std/regex/internal/parser",
+                  "std/regex/internal/tests",
+                  "std/regex/internal/thompson"],
+                 sourcesToTargets!allDSources
+                 .map!(a => a.expandOutputs("")[0])
+                 .filter!(a => !a.canFind("internal"))
+                 .filter!(a => !["std/c/freebsd/socket.d",
+                                 "std/c/linux/pthread.d",
+                                 "std/c/linux/termios.d",
+                                 "std/c/linux/tipc.d",
+                                 "std/c/osx/socket.d",
+                                 "std/windows/registry.d"].canFind(a))
+        );
 }
