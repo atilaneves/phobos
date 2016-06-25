@@ -1,0 +1,5 @@
+Object files in the source dir
+--dc=../dmd/src/dmd
+no_comp_db default
+binary default?
+optimize speed
