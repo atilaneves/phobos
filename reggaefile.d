@@ -497,11 +497,9 @@ Build _getBuild() {
     auto auto_tester_test  = Target.phony("auto-tester-test",  "", [unittest_]);
 
     auto targets = chain(newTargets,
-                         chain([json],
-                               [html], htmls,
+                         chain([html], htmls,
                                [allmod, rsync_prerelease, html_consolidated, changelog_html],
                                [checkwhitespace, auto_tester_build, auto_tester_test],
-                               //      unittestsModule, unittestsPackage,
                          )
                          .map!(a => optional(a))).array;
 
@@ -518,8 +516,7 @@ private auto defaultTargets() {
 }
 
 private auto optionalTargets() {
-    import std.stdio;
-    return chain(unitTestTargets, zipTargets, installTargets, fatTargets, singleModuleUnitTestTargets)
+    return chain(unitTestTargets, zipTargets, installTargets, fatTargets, jsonTargets, singleModuleUnitTestTargets)
         .map!optional;
 }
 
@@ -554,6 +551,7 @@ private auto singleModuleUnitTestTargets() {
                                 [a] ~ staticPhobos!(BUILD, MODEL)));
 }
 
+
 private auto zipTargets() {
     // More stuff
     enum ZIPFILE = "phobos.zip";
@@ -585,6 +583,13 @@ private auto installTargets() {
                                     "cp -r etc/* " ~ INSTALL_DIR ~ "/src/phobos/etc; " ~
                                     "cp LICENSE_1_0.TXT " ~ INSTALL_DIR ~ "/phobos-LICENSE.txt");
     return [install];
+}
+
+private Target[] jsonTargets() {
+    auto jsonFile = Target("$project/phobos.json",
+                           [DMD, dflags(BUILD, MODEL), "-o-", "-Xf$out", "$in"].join(" "),
+                           sourcesToTargets!allDSources);
+    return [Target.phony("json", "", [jsonFile])];
 }
 
 private Target[] fatTargets() {
