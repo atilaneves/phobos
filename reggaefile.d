@@ -501,8 +501,9 @@ Build _getBuild() {
                                [html], htmls,
                                [allmod, rsync_prerelease, html_consolidated, changelog_html],
                                [checkwhitespace, auto_tester_build, auto_tester_test],
-                               unittestsModule, unittestsPackage).
-                         map!(a => optional(a))).array;
+                               //      unittestsModule, unittestsPackage,
+                         )
+                         .map!(a => optional(a))).array;
 
     return Build(targets);
 }
@@ -517,7 +518,8 @@ private auto defaultTargets() {
 }
 
 private auto optionalTargets() {
-    return chain(unitTestTargets, zipTargets, installTargets, fatTargets)
+    import std.stdio;
+    return chain(unitTestTargets, zipTargets, installTargets, fatTargets, singleModuleUnitTestTargets)
         .map!optional;
 }
 
@@ -533,6 +535,23 @@ private auto unitTestTargets() {
     auto unittest_ = Target.phony("unittest", "", unitTestDependencies);
 
     return [unittest_, unittest_debug, unittest_release];
+}
+
+private auto singleModuleUnitTestTargets() {
+    // staticLib is needed because the command has to split apart both of
+    // its dependencies
+    auto staticLib = staticPhobos!(BUILD, MODEL)[0].expandOutputs(options.projectPath)[0];
+    auto command = [DMD, dflags(BUILD, MODEL), "-main", "-unittest", staticLib,
+                    "-defaultlib=", "-debuglib=", LINKDL, "-cov", "-run", "$in"].join(" ");
+
+    string testTarget(string fileName) {
+        return fileName.stripExtension.replace("/", ".") ~ ".test";
+    }
+
+    return sourcesToTargets!dSources
+        .map!(a => Target.phony(testTarget(a.expandOutputs("")[0]),
+                                command,
+                                [a] ~ staticPhobos!(BUILD, MODEL)));
 }
 
 private auto zipTargets() {
@@ -597,7 +616,7 @@ private Target[] staticPhobos(string build, string model)() {
     auto cmd = [DMD, dflags(build, model), "-lib", "-of$out", "$in"].join(" ");
     auto dependencies = chain(cObjs!(build, model),
                               [runtime(build, model)],
-                              allDSourcesTargets);
+                              sourcesToTargets!allDSources);
     return [Target(path, cmd, dependencies)];
 }
 
@@ -615,10 +634,6 @@ alias dSources = Sources!(["std", "etc"],
                               && !a.canFind("test/uda.d")
                               && !a.canFind("std/c/freebsd/socket")
                               && !a.canFind("std/c/osx/socket")));
-
-auto allDSourcesTargets() {
-    return sourcesToTargets!allDSources;
-}
 
 
 private Target runtime(string build, string model) @safe {
@@ -706,7 +721,7 @@ private Target[] dynamicPhobos(string build, string model)() {
 
         auto dependencies = chain(cObjs!(build, model),
                                   [runtime(build, model)],
-                                  allDSourcesTargets);
+                                  sourcesToTargets!allDSources);
 
         auto phobos = Target(patchName, cmd, dependencies);
 
