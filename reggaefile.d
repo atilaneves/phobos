@@ -39,6 +39,18 @@ enum SHARED = userVars.get("SHARED", ["linux", "freebsd"].canFind(OS) ? true : f
 enum DMD = "../dmd/src/dmd";
 enum DMDEXTRAFLAGS = userVars.get("DMDEXTRAFLAGS", "");
 
+// Documentation-related stuff
+enum DOCSRC = "../dlang.org";
+enum WEBSITE_DIR = "../web";
+enum DOC_OUTPUT_DIR = WEBSITE_DIR ~ "/phobos-prerelease";
+enum BIGDOC_OUTPUT_DIR = "/tmp";
+enum STDDOC = ["html.ddoc", "dlang.org.ddoc", "std_navbar-prerelease.ddoc",
+               "std.ddoc", "macros.ddoc", ".generated/modlist-prerelease.ddoc"].
+    map!(a => DOCSRC ~ "/" ~ a).array;
+enum BIGSTDDOC = ["std_consolidated.ddoc", "macros.ddoc"].map!(a => DOCSRC ~ "/" ~ a).array;
+enum DDOC = DMD ~ " -conf= " ~ MODEL_FLAG ~ " -w -c -o- -version=StdDdoc -I" ~
+    DRUNTIME_PATH ~ "/import " ~ DMDEXTRAFLAGS;
+
 
 version(Windows) enum CC = "dmc";
 else             enum CC = "cc";
@@ -88,18 +100,6 @@ Build _getBuild() {
         return userVars.get("ROOT", ROOT_OF_THEM_ALL ~ "/" ~ OS ~ "/" ~ build ~ "/" ~ model);
     }
 
-    // Documentation-related stuff
-    enum DOCSRC = "../dlang.org";
-    enum WEBSITE_DIR = "../web";
-    enum DOC_OUTPUT_DIR = WEBSITE_DIR ~ "/phobos-prerelease";
-    enum BIGDOC_OUTPUT_DIR = "/tmp";
-    enum STDDOC = ["html.ddoc", "dlang.org.ddoc", "std_navbar-prerelease.ddoc",
-                   "std.ddoc", "macros.ddoc", ".generated/modlist-prerelease.ddoc"].
-        map!(a => DOCSRC ~ "/" ~ a).array;
-    enum BIGSTDDOC = ["std_consolidated.ddoc", "macros.ddoc"].map!(a => DOCSRC ~ "/" ~ a).array;
-
-    enum DDOC = DMD ~ " -conf= " ~ MODEL_FLAG ~ " -w -c -o- -version=StdDdoc -I" ~
-        DRUNTIME_PATH ~ "/import " ~ DMDEXTRAFLAGS;
 
     string CFLAGS(string build = BUILD, string model = MODEL) {
         return MODEL_FLAG(model) ~ " -fPIC -DHAVE_UNISTD_H " ~ (build == "debug" ? "-g" : "-O3");
@@ -507,8 +507,7 @@ Build _getBuild() {
     auto auto_tester_test  = Target.phony("auto-tester-test",  "", [unittest_]);
 
     auto targets = chain(newTargets,
-                         chain([html], htmls,
-                               [allmod, rsync_prerelease, html_consolidated, changelog_html],
+                         chain([rsync_prerelease],
                                [checkwhitespace, auto_tester_build, auto_tester_test],
                          )
                          .map!(a => optional(a))).array;
@@ -526,7 +525,10 @@ private auto defaultTargets() {
 }
 
 private auto optionalTargets() {
-    return chain(unitTestTargets, zipTargets, installTargets, fatTargets, jsonTargets, singleModuleUnitTestTargets)
+    auto allmod = Target.phony("allmod", "echo " ~ sourceDocumentables.join(" "));
+    return chain(unitTestTargets, zipTargets, installTargets, fatTargets, jsonTargets,
+                 htmlTargets, [allmod],
+                 singleModuleUnitTestTargets)
         .map!optional;
 }
 
@@ -758,7 +760,7 @@ private string inGeneratedDir(string build, string model, string fileName) {
 }
 
 
-private Target[] unitTests(string build, string model)() {
+private auto /*Range!Target*/ unitTests(string build, string model)() {
     enum commonFlags = [dflags(build, model), "-defaultlib=", "-debuglib=", "-unittest"];
 
     static if(SHARED)
@@ -796,25 +798,74 @@ private Target[] unitTests(string build, string model)() {
 
     enum QUIET = userVars.get("QUIET", "");
     auto TIMELIMIT = shell("which timelimit 2>/dev/null || true") != "" ? "timelimit -t 60" : "";
-    return dModules
-        .map!(a => Target.phony("unittest/" ~ a ~ ".run",
-                                QUIET ~ TIMELIMIT ~ " $in " ~ a,
-                                [test_runner]))
-        .array
-        ;
+    return dModules.map!(a => Target.phony("unittest/" ~ a ~ ".run",
+                                           QUIET ~ TIMELIMIT ~ " $in " ~ a,
+                                           [test_runner]));
 }
 
 
-auto sourceDocumentables() {
+private auto htmlTargets() {
+    static assert(d2html("std/conv.d") == "std_conv.html");
+    static assert(d2html("std/range/package.d") == "std_range.html");
+
+    auto outputDir = Target(DOC_OUTPUT_DIR, "mkdir -p $out");
+
+    enum stdDoc = ["html.ddoc", "dlang.org.ddoc", "std_navbar-prerelease.ddoc",
+                   "std.ddoc", "macros.ddoc", ".generated/modlist-prerelease.ddoc"].
+        map!(a => buildPath(DOCSRC, a)).array;
+
+    // For each module, define a rule e.g.:
+    //  ../web/phobos/std_conv.html : std/conv.d $(STDDOC) ; ...
+    auto htmls = sourceDocumentables
+        .map!(a => Target(buildPath(DOC_OUTPUT_DIR, d2html(a)),
+                          chain([DDOC, "project.ddoc"], stdDoc,  ["-Df$out", "$in"]).join(" "),
+                          chain([Target(a)], stdDoc.map!(a => Target(a)))));
+    auto styles = "STYLECSS_TGT" in userVars ? [Target(userVars["STYLECSS_TGT"])] : [];
+    auto html = Target.phony("html", "", chain([outputDir], htmls, styles));
+
+    enum bigStdDoc = ["std_consolidated.ddoc", "macros.ddoc"].map!(a => buildPath(DOCSRC, a)).array;
+
+    auto bigHtmls = sourceDocumentables
+        .map!(a => Target(buildPath(BIGDOC_OUTPUT_DIR, d2html(a)),
+                          chain([DDOC, "project.ddoc"], bigStdDoc,  ["-Df$out", "$in"]).join(" "),
+                          chain([Target(a)], stdDoc.map!(a => Target(a)))));
+
+    string ddToHtmlCmd(string fileName) {
+        return [DDOC, "-Df", DOCSRC ~ "/" ~ fileName ~ ".html", DOCSRC ~ "/" ~ fileName ~ ".dd"].join(" ");
+    }
+    auto consolidatedCmd = [ddToHtmlCmd("std_consolidated_header"),
+                            ddToHtmlCmd("std_consolidated_footer"),
+                            ["cat $in > $out"].join(" ")].join("; ");
+    auto consolidatedDependencies = chain([Target(DOCSRC ~ "/std_consolidated_header.dd"),
+                                           Target(DOCSRC ~ "/std_consolidated_footer.dd")],
+                                          bigHtmls);
+
+    auto html_consolidated = Target.phony("html_consolidated", consolidatedCmd, consolidatedDependencies);
+
+
+    auto changelog_html = Target("changelog.html", DMD ~ " -Df$out $in", Target("changelog.dd"));
+
+    return [html, html_consolidated, changelog_html];
+}
+
+// D file to html, e.g. std/conv.d -> std_conv.html
+// But "package.d" is special cased: std/range/package.d -> std_range.html
+private string d2html(string str) {
+     str = str.baseName == "package.d" ? str.dirName : str.stripExtension;
+     return str.replace("/", "_") ~ ".html";
+}
+
+private auto /*Range!string*/ sourceDocumentables() {
 
     return chain(["index.d"],
-                 ["std/regex/internal/backtracking",
-                  "std/regex/internal/generator",
-                  "std/regex/internal/ir",
-                  "std/regex/internal/kickstart",
-                  "std/regex/internal/parser",
-                  "std/regex/internal/tests",
-                  "std/regex/internal/thompson"],
+                 // these regex/internal modules are probably a mistake
+                 ["std/regex/internal/backtracking.d",
+                  "std/regex/internal/generator.d",
+                  "std/regex/internal/ir.d",
+                  "std/regex/internal/kickstart.d",
+                  "std/regex/internal/parser.d",
+                  "std/regex/internal/tests.d",
+                  "std/regex/internal/thompson.d"],
                  sourcesToTargets!allDSources
                  .map!(a => a.expandOutputs("")[0])
                  .filter!(a => !a.canFind("internal"))
@@ -825,4 +876,8 @@ auto sourceDocumentables() {
                                  "std/c/osx/socket.d",
                                  "std/windows/registry.d"].canFind(a))
         );
+}
+
+private auto htmlDocumentables(string dir) {
+    return sourceDocumentables.map!(a => buildPath(dir, d2html(a)));
 }
