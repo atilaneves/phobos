@@ -8,90 +8,35 @@ import std.range;
 import std.file;
 
 
-version(OSX) enum OS = "osx";
-version(linux) enum OS = "linux";
+version(OSX)     enum OS = "osx";
+version(linux)   enum OS = "linux";
 version(FreeBSD) enum OS = "freebsd";
 version(OpenBSD) enum OS = "openbsd";
 version(Solaris) enum OS = "solaris";
-
 static assert(is(typeof(OS)), "Unrecognized or unsupported OS");
 
-version(X86) enum MODEL = "32";
+version(X86)    enum MODEL = "32";
 version(X86_64) enum MODEL = "64";
 static assert(is(typeof(MODEL)), "Cannot figure 32/64 model");
 
-
-string MODEL_FLAG(string model = MODEL) {
-    return "-m" ~ model;
-}
-
-auto shell(string cmd) {
-    return executeShell(cmd).output.chomp;
-}
-
-
-enum PIC = "PIC" in userVars ? "-fPIC" : "";
-enum INSTALL_DIR = "../install";
 enum DRUNTIME_PATH = "../druntime";
-enum ROOT_OF_THEM_ALL = "generated";
 // build with shared library support (default to true on supported platforms)
 enum SHARED = userVars.get("SHARED", ["linux", "freebsd"].canFind(OS) ? true : false);
 enum DMD = "../dmd/src/dmd";
 enum DMDEXTRAFLAGS = userVars.get("DMDEXTRAFLAGS", "");
 
-// Documentation-related stuff
-enum DOCSRC = "../dlang.org";
 enum WEBSITE_DIR = "../web";
 enum DOC_OUTPUT_DIR = WEBSITE_DIR ~ "/phobos-prerelease";
-enum BIGDOC_OUTPUT_DIR = "/tmp";
-enum STDDOC = ["html.ddoc", "dlang.org.ddoc", "std_navbar-prerelease.ddoc",
-               "std.ddoc", "macros.ddoc", ".generated/modlist-prerelease.ddoc"].
-    map!(a => DOCSRC ~ "/" ~ a).array;
-enum BIGSTDDOC = ["std_consolidated.ddoc", "macros.ddoc"].map!(a => DOCSRC ~ "/" ~ a).array;
-enum DDOC = DMD ~ " -conf= " ~ MODEL_FLAG ~ " -w -c -o- -version=StdDdoc -I" ~
-    DRUNTIME_PATH ~ "/import " ~ DMDEXTRAFLAGS;
-
-
-version(Windows) enum CC = "dmc";
-else             enum CC = "cc";
-
-version(Windows) enum DOTOBJ = ".obj";
-else             enum DOTOBJ = ".o";
 
 version(linux) enum LINKDL = "-L-ldl";
 else           enum LINKDL = "";
-
 
 // Default to a release built, override with -d BUILD=debug
 enum BUILD = userVars.get("BUILD", "release");
 enum CUSTOM_DRUNTIME = userVars.get("DRUNTIME", "") != "";
 
 
-// DRUNTIME is a variable in posix.mak
-static if(CUSTOM_DRUNTIME) {
-    string DRUNTIME(string build = BUILD, string model = MODEL) @safe {
-        return userVars["DRUNTIME"];
-    }
-} else {
-    version(Windows)
-        string DRUNTIME(string build = BUILD) @safe { return DRUNTIME_PATH ~ "/lib/druntime.lib"; }
-    else {
-        string DRUNTIME(string build = BUILD, string model = MODEL) @safe {
-            return DRUNTIME_PATH ~ "/generated/" ~ OS ~ "/" ~ build ~ "/" ~ model ~ "/libdruntime.a";
-        }
-    }
-}
-
-version(Windows) {
-    string DRUNTIMESO(string build = BUILD) { return ""; }
-} else {
-    string DRUNTIMESO(string build = BUILD, string model = MODEL) {
-        return stripExtension(DRUNTIME(build, model)) ~ ".so.a";
-    }
-}
-
-
-private Build _getBuild() {
+Build _getBuild() {
     return Build(chain(defaultTargets.map!createTopLevelTarget,
                        optionalTargets.map!optional));
 }
@@ -181,6 +126,7 @@ private auto zipTargets() {
 private auto installTargets() {
     version(OSX) enum lib_dir = "lib" ~ MODEL;
     else         enum lib_dir = "lib";
+    enum INSTALL_DIR = "../install";
 
     auto LIB = staticPhobos!(BUILD, MODEL)[0].expandOutputs("")[0];
     auto installCommonCmd = "mkdir -p " ~ [INSTALL_DIR, OS, lib_dir].join("/") ~ "; " ~
@@ -227,13 +173,8 @@ private Target[] fatTargets() {
 }
 
 private Target[] staticPhobos(string build, string model)() {
-    import std.path;
-
-    version(Windows) {
-        enum fileName = "phobos.lib";
-    } else {
-        enum fileName = "libphobos2.a";
-    }
+    version(Windows) enum fileName = "phobos.lib";
+    else             enum fileName = "libphobos2.a";
 
     auto path = inGeneratedDir(build, model, fileName);
     auto cmd = [DMD, dflags(build, model), "-lib", "-of$out", "$in"].join(" ");
@@ -299,11 +240,12 @@ private string dynamicRuntimeFileName(string build, string model) @safe {
     version(Windows)
         return "";
     else
-        return stripExtension(DRUNTIME(build, model)) ~ ".so.a";
+        return stripExtension(staticRuntimeFileName(build, model)) ~ ".so.a";
 }
 
 private string dflags(string build, string model) {
-    auto flags = "-conf= -I" ~ DRUNTIME_PATH ~ "/import " ~ DMDEXTRAFLAGS ~ " -w -dip25 " ~ MODEL_FLAG(model) ~ " " ~ PIC;
+    enum PIC = "PIC" in userVars ? "-fPIC" : "";
+    auto flags = "-conf= -I" ~ DRUNTIME_PATH ~ "/import " ~ DMDEXTRAFLAGS ~ " -w -dip25 -m" ~ model ~ " " ~ PIC;
     flags ~= build == "debug" ? " -g -debug" : " -O -release";
     return flags;
 }
@@ -403,6 +345,10 @@ private auto /*Range!Target*/ unitTests(string build, string model)() {
         ;
 
     enum QUIET = userVars.get("QUIET", "");
+    auto shell(string cmd) {
+        return executeShell(cmd).output.chomp;
+    }
+
     auto TIMELIMIT = shell("which timelimit 2>/dev/null || true") != "" ? "timelimit -t 60" : "";
     return dModules.map!(a => Target.phony("unittest/" ~ a ~ ".run",
                                            QUIET ~ TIMELIMIT ~ " $in " ~ a,
@@ -413,6 +359,10 @@ private auto /*Range!Target*/ unitTests(string build, string model)() {
 private auto htmlTargets() {
     static assert(d2html("std/conv.d") == "std_conv.html");
     static assert(d2html("std/range/package.d") == "std_range.html");
+
+    enum DOCSRC = "../dlang.org";
+    enum DDOC = DMD ~ " -conf= -m" ~ MODEL ~ " -w -c -o- -version=StdDdoc -I" ~
+        DRUNTIME_PATH ~ "/import " ~ DMDEXTRAFLAGS;
 
     auto outputDir = Target(DOC_OUTPUT_DIR, "mkdir -p $out");
 
@@ -430,6 +380,8 @@ private auto htmlTargets() {
     auto html = Target.phony("html", "", chain([outputDir], htmls, styles));
 
     enum bigStdDoc = ["std_consolidated.ddoc", "macros.ddoc"].map!(a => buildPath(DOCSRC, a)).array;
+
+    enum BIGDOC_OUTPUT_DIR = "/tmp";
 
     auto bigHtmls = sourceDocumentables
         .map!(a => Target(buildPath(BIGDOC_OUTPUT_DIR, d2html(a)),
@@ -482,8 +434,4 @@ private auto /*Range!string*/ sourceDocumentables() {
                                  "std/c/osx/socket.d",
                                  "std/windows/registry.d"].canFind(a))
         );
-}
-
-private auto htmlDocumentables(string dir) {
-    return sourceDocumentables.map!(a => buildPath(dir, d2html(a)));
 }

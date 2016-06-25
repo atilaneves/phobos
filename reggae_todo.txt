@@ -1,5 +1,6 @@
 Object files in the source dir
 --dc=../dmd/src/dmd
+--cc= version(windows) dmc else cc
 no_comp_db default
 binary default?
 optimize speed
