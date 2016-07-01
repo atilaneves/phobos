@@ -660,7 +660,7 @@ public:
     }
 
     ///
-    unittest
+    @system unittest
     {
         Variant a;
         assert(!a.hasValue);
@@ -692,7 +692,7 @@ public:
     }
 
     ///
-    unittest
+    @system unittest
     {
         Variant a = 5;
         auto b = a.peek!(int);
@@ -1079,7 +1079,7 @@ public:
     }
 
     ///
-    unittest
+    @system unittest
     {
         auto a = Variant(new int[10]);
         a[5] = 42;
@@ -1094,7 +1094,7 @@ public:
     Due to limitations in current language, read-modify-write
     operations $(D op=) will not work properly:
     */
-    unittest
+    @system unittest
     {
         Variant a = new int[10];
         a[5] = 42;
@@ -1102,7 +1102,7 @@ public:
         //assert(a[5] == 50); // will fail, a[5] is still 42
     }
 
-    unittest
+    @system unittest
     {
         int[int] hash = [ 42:24 ];
         Variant v = hash;
@@ -1165,7 +1165,7 @@ public:
     }
 }
 
-unittest
+@system unittest
 {
     Variant v;
     int foo() { return 42; }
@@ -1178,7 +1178,7 @@ unittest
 }
 
 // opIndex with static arrays, issue 12771
-unittest
+@system unittest
 {
     int[4] elements = [0, 1, 2, 3];
     Variant v = elements;
@@ -1191,7 +1191,7 @@ unittest
 }
 
 //Issue# 8195
-unittest
+@system unittest
 {
     struct S
     {
@@ -1211,7 +1211,7 @@ unittest
 }
 
 // Issue #10961
-unittest
+@system unittest
 {
     // Primarily test that we can assign a void[] to a Variant.
     void[] elements = cast(void[])[1, 2, 3];
@@ -1221,7 +1221,7 @@ unittest
 }
 
 // Issue #13352
-unittest
+@system unittest
 {
     alias TP = Algebraic!(long);
     auto a = TP(1L);
@@ -1237,7 +1237,7 @@ unittest
 }
 
 // Issue #13354
-unittest
+@system unittest
 {
     alias A = Algebraic!(string[]);
     A a = ["a", "b"];
@@ -1255,14 +1255,14 @@ unittest
 }
 
 // Issue #14198
-unittest
+@system unittest
 {
     Variant a = true;
     assert(a.type == typeid(bool));
 }
 
 // Issue #14233
-unittest
+@system unittest
 {
     alias Atom = Algebraic!(string, This[]);
 
@@ -1270,7 +1270,7 @@ unittest
     auto a = Atom(values);
 }
 
-pure nothrow @nogc
+pure nothrow @nogc @system
 unittest
 {
     Algebraic!(int, double) a;
@@ -1279,7 +1279,7 @@ unittest
 }
 
 // Issue 14457
-unittest
+@system unittest
 {
     alias A = Algebraic!(int, float, double);
     alias B = Algebraic!(int, float);
@@ -1293,7 +1293,7 @@ unittest
 }
 
 // Issue 14585
-unittest
+@system unittest
 {
     static struct S
     {
@@ -1304,13 +1304,13 @@ unittest
 }
 
 // Issue 14586
-unittest
+@system unittest
 {
     const Variant v = new immutable Object;
     v.get!(immutable Object);
 }
 
-unittest
+@system unittest
 {
     static struct S
     {
@@ -1336,7 +1336,7 @@ template Algebraic(T...)
 }
 
 ///
-unittest
+@system unittest
 {
     auto v = Algebraic!(int, double, string)(5);
     assert(v.peek!(int));
@@ -1359,7 +1359,7 @@ will perform $(LUCKY alpha renaming) on its constituent types, replacing `This`
 with the self-referenced type. The structure of the type involving `This` may
 be arbitrarily complex.
 */
-unittest
+@system unittest
 {
     // A tree is either a leaf or a branch of two other trees
     alias Tree(Leaf) = Algebraic!(Leaf, Tuple!(This*, This*));
@@ -1405,7 +1405,7 @@ Variant[] variantArray(T...)(T args)
 }
 
 ///
-unittest
+@system unittest
 {
     auto a = variantArray(1, 3.14, "Hi!");
     assert(a[1] == 3.14);
@@ -1416,7 +1416,7 @@ unittest
 /** Code that needs functionality similar to the $(D boxArray)
 function in the $(D std.boxer) module can achieve it like this:
 */
-unittest
+@system unittest
 {
     Variant[] fun(T...)(T args)
     {
@@ -1459,7 +1459,7 @@ static class VariantException : Exception
     }
 }
 
-unittest
+@system unittest
 {
     alias W1 = This2Variant!(char, int, This[int]);
     alias W2 = AliasSeq!(int, char[int]);
@@ -1469,7 +1469,7 @@ unittest
     var_t foo = "quux";
 }
 
-unittest
+@system unittest
 {
      alias A = Algebraic!(real, This[], This[int], This[This]);
      A v1, v2, v3;
@@ -1484,7 +1484,7 @@ unittest
      //writeln(v1);
 }
 
-unittest
+@system unittest
 {
     // try it with an oddly small size
     VariantN!(1) test;
@@ -1579,7 +1579,7 @@ unittest
 
 // tests adapted from
 // http://www.dsource.org/projects/tango/browser/trunk/tango/core/Variant.d?rev=2601
-unittest
+@system unittest
 {
     Variant v;
 
@@ -1700,7 +1700,7 @@ unittest
     }
 }
 
-unittest
+@system unittest
 {
     // bug 1558
     Variant va=1;
@@ -1709,7 +1709,7 @@ unittest
     assert((va-vb).get!(int) == 3);
 }
 
-unittest
+@system unittest
 {
     Variant a;
     a=5;
@@ -1720,14 +1720,14 @@ unittest
     assert(c[3] == "hello");
 }
 
-unittest
+@system unittest
 {
     Variant v = 5;
     assert (!__traits(compiles, v.coerce!(bool delegate())));
 }
 
 
-unittest
+@system unittest
 {
     struct Huge {
         real a, b, c, d, e, f, g;
@@ -1740,7 +1740,7 @@ unittest
     assert(v.get!(Huge).e == 42);
 }
 
-unittest
+@system unittest
 {
     const x = Variant(42);
     auto y1 = x.get!(const int);
@@ -1749,7 +1749,7 @@ unittest
 }
 
 // test iteration
-unittest
+@system unittest
 {
     auto v = Variant([ 1, 2, 3, 4 ][]);
     auto j = 0;
@@ -1761,14 +1761,14 @@ unittest
 }
 
 // test convertibility
-unittest
+@system unittest
 {
     auto v = Variant("abc".dup);
     assert(v.convertsTo!(char[]));
 }
 
 // http://d.puremagic.com/issues/show_bug.cgi?id=5424
-unittest
+@system unittest
 {
     interface A {
         void func1();
@@ -1783,7 +1783,7 @@ unittest
     Variant b = Variant(a);
 }
 
-unittest
+@system unittest
 {
     // bug 7070
     Variant v;
@@ -1791,7 +1791,7 @@ unittest
 }
 
 // Class and interface opEquals, issue 12157
-unittest
+@system unittest
 {
     class Foo { }
 
@@ -1809,7 +1809,7 @@ unittest
 }
 
 // Const parameters with opCall, issue 11361.
-unittest
+@system unittest
 {
     static string t1(string c) {
         return c ~ "a";
@@ -1839,7 +1839,7 @@ unittest
 }
 
 // issue 12071
-unittest
+@system unittest
 {
     static struct Structure { int data; }
     alias VariantTest = Algebraic!(Structure delegate() pure nothrow @nogc @safe);
@@ -1856,7 +1856,7 @@ unittest
 }
 
 // Ordering comparisons of incompatible types, e.g. issue 7990.
-unittest
+@system unittest
 {
     assertThrown!VariantException(Variant(3) < "a");
     assertThrown!VariantException("a" < Variant(3));
@@ -1867,7 +1867,7 @@ unittest
 }
 
 // Handling of unordered types, e.g. issue 9043.
-unittest
+@system unittest
 {
     static struct A { int a; }
 
@@ -1879,7 +1879,7 @@ unittest
 }
 
 // Handling of empty types and arrays, e.g. issue 10958
-unittest
+@system unittest
 {
     class EmptyClass { }
     struct EmptyStruct { }
@@ -1910,7 +1910,7 @@ unittest
 }
 
 // Handling of void function pointers / delegates, e.g. issue 11360
-unittest
+@system unittest
 {
     static void t1() { }
     Variant v = &t1;
@@ -1922,7 +1922,7 @@ unittest
 }
 
 // Using peek for large structs, issue 8580
-unittest
+@system unittest
 {
     struct TestStruct(bool pad)
     {
@@ -1986,7 +1986,7 @@ template visit(Handler ...)
 }
 
 ///
-unittest
+@system unittest
 {
     Algebraic!(int, string) variant;
 
@@ -2007,7 +2007,7 @@ unittest
     assert(rslt == -1);
 }
 
-unittest
+@system unittest
 {
     Algebraic!(size_t, string) variant;
 
@@ -2092,7 +2092,7 @@ template tryVisit(Handler ...)
 }
 
 ///
-unittest
+@system unittest
 {
     Algebraic!(int, string) variant;
 
@@ -2108,7 +2108,7 @@ unittest
     assert(which == -100);
 }
 
-unittest
+@system unittest
 {
     Algebraic!(int, string) variant;
 
@@ -2140,7 +2140,7 @@ private template isAlgebraic(Type)
         enum isAlgebraic = false;
 }
 
-unittest
+@safe unittest
 {
     static assert(!isAlgebraic!(Variant));
     static assert( isAlgebraic!(Algebraic!(string)));
@@ -2260,7 +2260,7 @@ private auto visitImpl(bool Strict, VariantType, Handler...)(VariantType variant
     assert(false);
 }
 
-unittest
+@system unittest
 {
     // validate that visit can be called with a const type
     struct Foo { int depth; }
@@ -2276,7 +2276,7 @@ unittest
     assert(depth(fb) == 3);
 }
 
-unittest
+@system unittest
 {
     // http://d.puremagic.com/issues/show_bug.cgi?id=5310
     const Variant a;
@@ -2286,7 +2286,7 @@ unittest
     assert(b == a);
 }
 
-unittest
+@system unittest
 {
     // http://d.puremagic.com/issues/show_bug.cgi?id=10017
     static struct S
@@ -2299,7 +2299,7 @@ unittest
     v2 = v1;  // AssertError: target must be non-null
     assert(v1 == v2);
 }
-unittest
+@system unittest
 {
     // http://d.puremagic.com/issues/show_bug.cgi?id=7069
     Variant v;
@@ -2460,7 +2460,7 @@ unittest
     }
 }
 
-unittest
+@safe unittest
 {
     static struct DummyScope
     {
@@ -2474,7 +2474,7 @@ unittest
     }
 }
 
-unittest
+@system unittest
 {
     // https://issues.dlang.org/show_bug.cgi?id=10194
     // Also test for elaborate copying
@@ -2520,7 +2520,7 @@ unittest
     assert(S.cnt == 0);
 }
 
-unittest
+@safe unittest
 {
     // Bugzilla 13300
     static struct S
@@ -2550,7 +2550,7 @@ unittest
     auto a = appender!(T[]);
 }
 
-unittest
+@system unittest
 {
     // Bugzilla 13871
     alias A = Algebraic!(int, typeof(null));
@@ -2561,7 +2561,7 @@ unittest
     var = C(B());
 }
 
-unittest
+@system unittest
 {
     // Make sure Variant can handle types with opDispatch but no length field.
     struct SWithNoLength
@@ -2588,7 +2588,7 @@ unittest
     assertThrown!VariantException(v.length);
 }
 
-unittest
+@safe unittest
 {
     // Bugzilla 13534
     static assert(!__traits(compiles, () @safe {
@@ -2598,7 +2598,7 @@ unittest
     }));
 }
 
-unittest
+@system unittest
 {
     // Bugzilla 15039
     import std.variant;
@@ -2616,7 +2616,7 @@ unittest
     );
 }
 
-unittest
+@system unittest
 {
     // Bugzilla 15791
     int n = 3;
@@ -2630,7 +2630,7 @@ unittest
     assert(v.get!NS2.foo() == 30);
 }
 
-unittest
+@system unittest
 {
     // Bugzilla 15827
     static struct Foo15827 { Variant v; this(Foo15827 v) {} }
