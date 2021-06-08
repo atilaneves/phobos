@@ -6565,7 +6565,7 @@ Assignment operators
     }
 
 /// Ditto
-    void opAssign(T rhs)
+    void opAssign(T rhs) scope
     {
         import std.algorithm.mutation : move;
 
@@ -6663,6 +6663,32 @@ assert(refCountedStore.isInitialized)).
 {
     auto rc1 = RefCounted!(int, RefCountedAutoInitialize.no)(5);
     rc1._refCounted.initialize();
+}
+
+// not @nogc due to `.dup`
+@betterC pure @safe nothrow unittest
+{
+    static struct Container
+    {
+        int[] data;
+    }
+
+    static int[] getPtr2(scope Container local)
+    {
+        RefCounted!Container rc = local;
+        return rc.refCountedPayload().data;
+    }
+
+    static int[] getPtr()
+    {
+        int[42] local;
+        return getPtr2(Container(local));
+    }
+
+    auto ptr = getPtr();
+    const save = ptr.dup;
+    auto other = getPtr();
+    assert(save[] == ptr[]);
 }
 
 
