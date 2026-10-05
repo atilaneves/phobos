@@ -520,6 +520,7 @@ available for `ContiguousFreeList`.
 struct ContiguousFreeList(ParentAllocator,
      size_t minSize, size_t maxSize = minSize)
 {
+    import std.algorithm.mutation : move;
     import std.experimental.allocator.building_blocks.null_allocator
         : NullAllocator;
     import std.experimental.allocator.building_blocks.stats_collector
@@ -529,8 +530,6 @@ struct ContiguousFreeList(ParentAllocator,
     alias Impl = FreeList!(NullAllocator, minSize, maxSize);
     enum unchecked = minSize == 0 && maxSize == unbounded;
     alias Node = Impl.Node;
-
-    import std.algorithm.mutation : move;
 
     alias SParent = StatsCollector!(ParentAllocator, Options.bytesUsed);
 
@@ -650,8 +649,6 @@ struct ContiguousFreeList(ParentAllocator,
         static if (maxSize == chooseAtRuntime) fl.max = max;
         fl.min = min;
         initialize(cast(ubyte[])(parent.allocate(bytes)), max);
-        static if (stateSize!ParentAllocator)
-            this.parent = SParent(move(parent));
     }
 
     /// ditto
@@ -663,8 +660,7 @@ struct ContiguousFreeList(ParentAllocator,
         static if (maxSize == chooseAtRuntime) fl.max = max;
         fl.min = min;
         initialize(cast(ubyte[])(parent.allocate(bytes)), max);
-        static if (stateSize!ParentAllocator)
-            this.parent = SParent(move(parent));
+        this.parent = SParent(move(parent));
     }
 
     /**

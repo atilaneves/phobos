@@ -100,8 +100,9 @@ struct Region(ParentAllocator,
     static if (stateSize!ParentAllocator)
     this(ParentAllocator parent, size_t n)
     {
-        this.parent = parent;
-        this(cast(ubyte[]) (parent.allocate(n.roundUpToAlignment(alignment))));
+        import std.algorithm.mutation : move;
+        this.parent = move(parent);
+        this(cast(ubyte[]) (this.parent.allocate(n.roundUpToAlignment(alignment))));
     }
 
     /// Copying would duplicate ownership or allocation state.
@@ -194,8 +195,10 @@ struct Region(ParentAllocator,
 
     /**
     Deallocates all memory allocated by this region, which can be subsequently
-    reused for new allocations. All previously allocated blocks are invalidated.
-    This operation requires that no outstanding aliases are subsequently used.
+    reused for new allocations.
+
+    This operation is $(D @system) because it invalidates all previously allocated
+    blocks; outstanding aliases to those blocks must no longer be used.
     */
     bool deallocateAll() pure nothrow @system @nogc
     {
@@ -338,6 +341,44 @@ version (StdUnittest)
     testAllocator!(() => SharedRegion!(Mallocator, Mallocator.alignment, Yes.growDownwards)(1024 * 64));
 }
 
+// Stateful, noncopyable parents can be transferred into composed allocators.
+@system nothrow @nogc unittest
+{
+    import std.experimental.allocator.mallocator : Mallocator;
+    import std.experimental.allocator.building_blocks.bitmapped_block :
+        BitmappedBlock;
+
+    alias R = Region!Mallocator;
+    auto a = Region!R(R(4096), 1024);
+    assert(a.allocate(64).length == 64);
+    auto b = BitmappedBlock!(64, R.alignment, R)(R(4096), 1024);
+    assert(b.allocate(64).length == 64);
+    ubyte[1024] buf;
+    auto c = Region!(BorrowedRegion!())(BorrowedRegion!()(buf[]), 512);
+    auto block = c.allocate(64);
+    assert(block.length == 64);
+    assert(block.ptr == buf.ptr);
+    assert(c.parent.allocate(64).ptr == buf.ptr + 512);
+}
+
+@system nothrow @nogc unittest
+{
+    import std.experimental.allocator.mallocator : Mallocator;
+    import std.algorithm.mutation : move;
+    import std.experimental.allocator.building_blocks.bitmapped_block :
+        BitmappedBlock, BitmappedBlockWithInternalPointers;
+
+    alias R = Region!Mallocator;
+    auto a = BitmappedBlock!(chooseAtRuntime, R.alignment, R)(R(4096), 1024, 64);
+    assert(a.allocate(64).length == 64);
+    auto b = BitmappedBlockWithInternalPointers!(64, R.alignment, R)(R(4096), 1024);
+    assert(b.allocate(64).length == 64);
+    auto parent = R(4096);
+    auto data = cast(ubyte[]) parent.allocate(1024);
+    auto c = BitmappedBlockWithInternalPointers!(64, R.alignment, R)(move(parent), data);
+    assert(c.allocate(64).length == 64);
+}
+
 @system nothrow @nogc unittest
 {
     import std.experimental.allocator.mallocator : Mallocator;
@@ -399,7 +440,7 @@ struct BorrowedRegion(uint minAlign = platformAlignment,
             _current = roundedBegin();
     }
 
-    /// Copying would duplicate ownership or allocation state.
+    /// Copying would duplicate the allocation cursor and state.
     @disable this(this);
 
     /**
@@ -579,8 +620,8 @@ struct BorrowedRegion(uint minAlign = platformAlignment,
     Deallocates all memory allocated by this region, which can be subsequently
     reused for new allocations.
 
-    This operation is $(D @system) because outstanding aliases to allocations
-    cannot be ruled out. All previously allocated blocks are invalidated.
+    This operation is $(D @system) because it invalidates all previously allocated
+    blocks; outstanding aliases to those blocks must no longer be used.
     */
     bool deallocateAll() pure nothrow @system @nogc
     {
@@ -649,8 +690,7 @@ struct BorrowedRegion(uint minAlign = platformAlignment,
             BorrowedRegion!(minAlign, direction),
             Region!(Mallocator, minAlign, direction),
             SharedBorrowedRegion!(minAlign, direction),
-            SharedRegion!(Mallocator, minAlign, direction),
-            InSituRegion!(storeSize, minAlign)))
+            SharedRegion!(Mallocator, minAlign, direction)))
         {
             static assert(__traits(compiles,
                 (ref R region) @system
@@ -662,18 +702,22 @@ struct BorrowedRegion(uint minAlign = platformAlignment,
                 {
                     region.deallocateAll();
                 }));
-            static assert(!__traits(compiles,
-                (ref R region) @system
-                {
-                    auto copy = region;
-                }));
-            static assert(!__traits(compiles,
-                (ref R destination, ref R source) @system
-                {
-                    destination = source;
-                }));
+            static assert(!__traits(isCopyable, R));
         }
     }
+
+    alias R = InSituRegion!(storeSize, minAlign);
+    static assert(__traits(compiles,
+        (ref R region) @system
+        {
+            region.deallocateAll();
+        }));
+    static assert(!__traits(compiles,
+        (ref R region) @safe
+        {
+            region.deallocateAll();
+        }));
+    static assert(!__traits(isCopyable, R));
 }
 
 ///
@@ -852,8 +896,10 @@ struct InSituRegion(size_t size, size_t minAlign = platformAlignment)
     }
 
     /**
-    Deallocates all memory allocated with this allocator. All previously
-    allocated blocks are invalidated; outstanding aliases must no longer be used.
+    Deallocates all memory allocated with this allocator.
+
+    This operation is $(D @system) because it invalidates all previously allocated
+    blocks; outstanding aliases to those blocks must no longer be used.
     */
     bool deallocateAll() @system
     {
@@ -1323,8 +1369,10 @@ shared struct SharedRegion(ParentAllocator,
 
     /**
     Deallocates all memory allocated by this region, which can be subsequently
-    reused for new allocations. All previously allocated blocks are invalidated.
-    This operation requires that no outstanding aliases are subsequently used.
+    reused for new allocations.
+
+    This operation is $(D @system) because it invalidates all previously allocated
+    blocks; outstanding aliases to those blocks must no longer be used.
     */
     bool deallocateAll() pure nothrow @system @nogc
     {
@@ -1562,7 +1610,7 @@ shared struct SharedBorrowedRegion(uint minAlign = platformAlignment,
             _current = cast(typeof(_current)) roundedBegin();
     }
 
-    /// Copying would duplicate ownership or allocation state.
+    /// Copying would duplicate the allocation cursor and state.
     @disable this(this);
 
     /**
@@ -1714,8 +1762,10 @@ shared struct SharedBorrowedRegion(uint minAlign = platformAlignment,
 
     /**
     Deallocates all memory allocated by this region, which can be subsequently
-    reused for new allocations. All previously allocated blocks are invalidated.
-    This operation requires that no outstanding aliases are subsequently used.
+    reused for new allocations.
+
+    This operation is $(D @system) because it invalidates all previously allocated
+    blocks; outstanding aliases to those blocks must no longer be used.
     */
     bool deallocateAll() shared pure nothrow @system @nogc
     {
