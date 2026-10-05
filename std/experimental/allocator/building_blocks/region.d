@@ -29,7 +29,8 @@ the store and the limits. One allocation entails rounding up the allocation
 size for alignment purposes, bumping the current pointer, and comparing it
 against the limit.
 
-`Region` deallocates the chunk of memory during destruction.
+`Region` deallocates the chunk of memory during destruction. It is noncopyable:
+copying would duplicate ownership of the backing storage and allocation state.
 
 The `minAlign` parameter establishes alignment. If $(D minAlign > 1), the
 sizes of all allocation requests are rounded up to a multiple of `minAlign`.
@@ -103,10 +104,8 @@ struct Region(ParentAllocator,
         this(cast(ubyte[]) (parent.allocate(n.roundUpToAlignment(alignment))));
     }
 
-    /*
-    TODO: The postblit of `BasicRegion` should be disabled because such objects
-    should not be copied around naively.
-    */
+    /// Copying would duplicate ownership or allocation state.
+    @disable this(this);
 
     /**
     If `ParentAllocator` defines `deallocate`, the region defines a destructor
@@ -195,9 +194,10 @@ struct Region(ParentAllocator,
 
     /**
     Deallocates all memory allocated by this region, which can be subsequently
-    reused for new allocations.
+    reused for new allocations. All previously allocated blocks are invalidated.
+    This operation requires that no outstanding aliases are subsequently used.
     */
-    bool deallocateAll() pure nothrow @nogc
+    bool deallocateAll() pure nothrow @system @nogc
     {
         return _impl.deallocateAll;
     }
@@ -358,6 +358,9 @@ Unlike a `Region`, a `BorrowedRegion` does not own the memory it allocates from
 and will not deallocate that memory upon destruction. Instead, it is the user's
 responsibility to ensure that the memory is properly disposed of.
 
+A `BorrowedRegion` is noncopyable: independent copies of its allocation cursor
+could return overlapping blocks with incompatible types.
+
 In all other respects, a `BorrowedRegion` behaves exactly like a `Region`.
 */
 struct BorrowedRegion(uint minAlign = platformAlignment,
@@ -396,10 +399,8 @@ struct BorrowedRegion(uint minAlign = platformAlignment,
             _current = roundedBegin();
     }
 
-    /*
-    TODO: The postblit of `BorrowedRegion` should be disabled because such objects
-    should not be copied around naively.
-    */
+    /// Copying would duplicate ownership or allocation state.
+    @disable this(this);
 
     /**
     Rounds the given size to a multiple of the `alignment`
@@ -577,8 +578,11 @@ struct BorrowedRegion(uint minAlign = platformAlignment,
     /**
     Deallocates all memory allocated by this region, which can be subsequently
     reused for new allocations.
+
+    This operation is $(D @system) because outstanding aliases to allocations
+    cannot be ruled out. All previously allocated blocks are invalidated.
     */
-    bool deallocateAll() pure nothrow @nogc
+    bool deallocateAll() pure nothrow @system @nogc
     {
         static if (growDownwards)
         {
@@ -628,6 +632,46 @@ struct BorrowedRegion(uint minAlign = platformAlignment,
         else
         {
             return _end - _current;
+        }
+    }
+}
+
+@safe unittest
+{
+    import std.experimental.allocator.mallocator : Mallocator;
+    import std.meta : AliasSeq;
+
+    enum minAlign = 1;
+    enum storeSize = 64;
+    static foreach (direction; [No.growDownwards, Yes.growDownwards])
+    {
+        static foreach (R; AliasSeq!(
+            BorrowedRegion!(minAlign, direction),
+            Region!(Mallocator, minAlign, direction),
+            SharedBorrowedRegion!(minAlign, direction),
+            SharedRegion!(Mallocator, minAlign, direction),
+            InSituRegion!(storeSize, minAlign)))
+        {
+            static assert(__traits(compiles,
+                (ref R region) @system
+                {
+                    region.deallocateAll();
+                }));
+            static assert(!__traits(compiles,
+                (ref R region) @safe
+                {
+                    region.deallocateAll();
+                }));
+            static assert(!__traits(compiles,
+                (ref R region) @system
+                {
+                    auto copy = region;
+                }));
+            static assert(!__traits(compiles,
+                (ref R destination, ref R source) @system
+                {
+                    destination = source;
+                }));
         }
     }
 }
@@ -808,9 +852,10 @@ struct InSituRegion(size_t size, size_t minAlign = platformAlignment)
     }
 
     /**
-    Deallocates all memory allocated with this allocator.
+    Deallocates all memory allocated with this allocator. All previously
+    allocated blocks are invalidated; outstanding aliases must no longer be used.
     */
-    bool deallocateAll()
+    bool deallocateAll() @system
     {
         // We don't care to lazily init the region
         return _impl.deallocateAll;
@@ -1170,6 +1215,7 @@ version (Posix) @system nothrow @nogc unittest
 /**
 The threadsafe version of the `Region` allocator.
 Allocations and deallocations are lock-free based using $(REF cas, core,atomic).
+`SharedRegion` is noncopyable because it owns its backing storage and allocation state.
 */
 shared struct SharedRegion(ParentAllocator,
     uint minAlign = platformAlignment,
@@ -1194,6 +1240,9 @@ shared struct SharedRegion(ParentAllocator,
     {
         alias parent = ParentAllocator.instance;
     }
+    /// Copying would duplicate ownership and allocation state.
+    @disable this(this);
+
     private shared SharedBorrowedRegion!(minAlign, growDownwards) _impl;
 
     private void* roundedBegin() const pure nothrow @trusted @nogc
@@ -1274,9 +1323,10 @@ shared struct SharedRegion(ParentAllocator,
 
     /**
     Deallocates all memory allocated by this region, which can be subsequently
-    reused for new allocations.
+    reused for new allocations. All previously allocated blocks are invalidated.
+    This operation requires that no outstanding aliases are subsequently used.
     */
-    bool deallocateAll() pure nothrow @nogc
+    bool deallocateAll() pure nothrow @system @nogc
     {
         return _impl.deallocateAll;
     }
@@ -1471,6 +1521,9 @@ allocates from and will not deallocate that memory upon destruction. Instead,
 it is the user's responsibility to ensure that the memory is properly disposed
 of.
 
+A `SharedBorrowedRegion` is noncopyable: independent copies of its allocation
+cursor could return overlapping blocks with incompatible types.
+
 In all other respects, a `SharedBorrowedRegion` behaves exactly like a `SharedRegion`.
 */
 shared struct SharedBorrowedRegion(uint minAlign = platformAlignment,
@@ -1509,10 +1562,8 @@ shared struct SharedBorrowedRegion(uint minAlign = platformAlignment,
             _current = cast(typeof(_current)) roundedBegin();
     }
 
-    /*
-    TODO: The postblit of `SharedBorrowedRegion` should be disabled because
-    such objects should not be copied around naively.
-    */
+    /// Copying would duplicate ownership or allocation state.
+    @disable this(this);
 
     /**
     Rounds the given size to a multiple of the `alignment`
@@ -1663,9 +1714,10 @@ shared struct SharedBorrowedRegion(uint minAlign = platformAlignment,
 
     /**
     Deallocates all memory allocated by this region, which can be subsequently
-    reused for new allocations.
+    reused for new allocations. All previously allocated blocks are invalidated.
+    This operation requires that no outstanding aliases are subsequently used.
     */
-    bool deallocateAll() shared pure nothrow @nogc
+    bool deallocateAll() shared pure nothrow @system @nogc
     {
         import core.atomic : atomicStore;
         static if (growDownwards)

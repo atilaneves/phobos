@@ -1,0 +1,11 @@
+Region allocators are noncopyable and bulk reset is `@system`
+
+`Region`, `BorrowedRegion`, `SharedRegion`, and `SharedBorrowedRegion` no longer
+allow copying. Copies duplicate allocation cursors and can return overlapping
+blocks with incompatible types; owning regions also duplicate responsibility
+for releasing their backing storage. Pass these allocators by reference instead
+of copying them. `InSituRegion` was already noncopyable.
+
+`deallocateAll` is explicitly `@system` for these types and `InSituRegion`.
+Reset invalidates every outstanding allocation, and the allocator cannot prove
+that callers have stopped using all aliases before storage is reused.

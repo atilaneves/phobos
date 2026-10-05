@@ -530,6 +530,8 @@ struct ContiguousFreeList(ParentAllocator,
     enum unchecked = minSize == 0 && maxSize == unbounded;
     alias Node = Impl.Node;
 
+    import std.algorithm.mutation : move;
+
     alias SParent = StatsCollector!(ParentAllocator, Options.bytesUsed);
 
     // state
@@ -600,7 +602,7 @@ struct ContiguousFreeList(ParentAllocator,
     this(ParentAllocator parent, ubyte[] buffer)
     {
         initialize(buffer);
-        this.parent = SParent(parent);
+        this.parent = SParent(move(parent));
     }
 
     /// ditto
@@ -615,7 +617,7 @@ struct ContiguousFreeList(ParentAllocator,
     this(ParentAllocator parent, size_t bytes)
     {
         initialize(cast(ubyte[])(parent.allocate(bytes)));
-        this.parent = SParent(parent);
+        this.parent = SParent(move(parent));
     }
 
     /// ditto
@@ -636,7 +638,7 @@ struct ContiguousFreeList(ParentAllocator,
         static if (maxSize == chooseAtRuntime) fl.max = max;
         static if (minSize == chooseAtRuntime) fl.min = max;
         initialize(cast(ubyte[])(parent.allocate(bytes)), max);
-        this.parent = SParent(parent);
+        this.parent = SParent(move(parent));
     }
 
     /// ditto
@@ -649,7 +651,7 @@ struct ContiguousFreeList(ParentAllocator,
         fl.min = min;
         initialize(cast(ubyte[])(parent.allocate(bytes)), max);
         static if (stateSize!ParentAllocator)
-            this.parent = SParent(parent);
+            this.parent = SParent(move(parent));
     }
 
     /// ditto
@@ -662,7 +664,7 @@ struct ContiguousFreeList(ParentAllocator,
         fl.min = min;
         initialize(cast(ubyte[])(parent.allocate(bytes)), max);
         static if (stateSize!ParentAllocator)
-            this.parent = SParent(parent);
+            this.parent = SParent(move(parent));
     }
 
     /**
