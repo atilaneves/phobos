@@ -341,7 +341,7 @@ version (StdUnittest)
     testAllocator!(() => SharedRegion!(Mallocator, Mallocator.alignment, Yes.growDownwards)(1024 * 64));
 }
 
-// Stateful, noncopyable parents can be transferred into composed allocators.
+// Region and BitmappedBlock constructors accept noncopyable parent allocators.
 @system nothrow @nogc unittest
 {
     import std.experimental.allocator.mallocator : Mallocator;
