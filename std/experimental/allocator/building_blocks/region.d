@@ -349,6 +349,7 @@ version (StdUnittest)
         BitmappedBlock;
 
     alias R = Region!Mallocator;
+    // The constructor moves the temporary parent into its member internally.
     auto a = Region!R(R(4096), 1024);
     assert(a.allocate(64).length == 64);
     auto b = BitmappedBlock!(64, R.alignment, R)(R(4096), 1024);
