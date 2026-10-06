@@ -362,6 +362,9 @@ version (StdUnittest)
     assert(c.parent.allocate(64).ptr == buf.ptr + 512);
 }
 
+// The runtime block-size and internal-pointer constructors must accept
+// noncopyable parents too. Allocation checks verify that moving the parent
+// leaves each allocator with usable backing storage.
 @system nothrow @nogc unittest
 {
     import std.experimental.allocator.mallocator : Mallocator;
