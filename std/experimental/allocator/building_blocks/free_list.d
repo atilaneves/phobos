@@ -520,6 +520,7 @@ available for `ContiguousFreeList`.
 struct ContiguousFreeList(ParentAllocator,
      size_t minSize, size_t maxSize = minSize)
 {
+    import std.algorithm.mutation : move;
     import std.experimental.allocator.building_blocks.null_allocator
         : NullAllocator;
     import std.experimental.allocator.building_blocks.stats_collector
@@ -600,7 +601,7 @@ struct ContiguousFreeList(ParentAllocator,
     this(ParentAllocator parent, ubyte[] buffer)
     {
         initialize(buffer);
-        this.parent = SParent(parent);
+        this.parent = SParent(move(parent));
     }
 
     /// ditto
@@ -615,7 +616,7 @@ struct ContiguousFreeList(ParentAllocator,
     this(ParentAllocator parent, size_t bytes)
     {
         initialize(cast(ubyte[])(parent.allocate(bytes)));
-        this.parent = SParent(parent);
+        this.parent = SParent(move(parent));
     }
 
     /// ditto
@@ -636,7 +637,7 @@ struct ContiguousFreeList(ParentAllocator,
         static if (maxSize == chooseAtRuntime) fl.max = max;
         static if (minSize == chooseAtRuntime) fl.min = max;
         initialize(cast(ubyte[])(parent.allocate(bytes)), max);
-        this.parent = SParent(parent);
+        this.parent = SParent(move(parent));
     }
 
     /// ditto
@@ -648,8 +649,6 @@ struct ContiguousFreeList(ParentAllocator,
         static if (maxSize == chooseAtRuntime) fl.max = max;
         fl.min = min;
         initialize(cast(ubyte[])(parent.allocate(bytes)), max);
-        static if (stateSize!ParentAllocator)
-            this.parent = SParent(parent);
     }
 
     /// ditto
@@ -661,8 +660,7 @@ struct ContiguousFreeList(ParentAllocator,
         static if (maxSize == chooseAtRuntime) fl.max = max;
         fl.min = min;
         initialize(cast(ubyte[])(parent.allocate(bytes)), max);
-        static if (stateSize!ParentAllocator)
-            this.parent = SParent(parent);
+        this.parent = SParent(move(parent));
     }
 
     /**

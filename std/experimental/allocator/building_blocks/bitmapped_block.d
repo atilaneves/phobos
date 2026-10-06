@@ -167,9 +167,10 @@ private mixin template BitmappedBlockImpl(bool isShared, bool multiBlock)
     static if (!is(ParentAllocator == NullAllocator) && stateSize!ParentAllocator)
     this(ParentAllocator parent, size_t capacity)
     {
-        this.parent = parent;
+        import std.algorithm.mutation : move;
+        this.parent = move(parent);
         size_t toAllocate = totalAllocation(capacity);
-        auto data = cast(ubyte[])(parent.allocate(toAllocate));
+        auto data = cast(ubyte[])(this.parent.allocate(toAllocate));
         this(data);
     }
 
@@ -187,8 +188,9 @@ private mixin template BitmappedBlockImpl(bool isShared, bool multiBlock)
         stateSize!ParentAllocator)
     this(ParentAllocator parent, size_t capacity, uint blockSize)
     {
+        import std.algorithm.mutation : move;
         this._blockSize = blockSize;
-        this(parent, capacity);
+        this(move(parent), capacity);
     }
 
     static if (!is(ParentAllocator == NullAllocator)
@@ -2198,8 +2200,9 @@ struct BitmappedBlockWithInternalPointers(
     static if (stateSize!ParentAllocator)
     this(ParentAllocator parent, ubyte[] data)
     {
+        import std.algorithm.mutation : move;
         _heap = BitmappedBlock!(theBlockSize, theAlignment, ParentAllocator)(data);
-        _heap.parent = parent;
+        _heap.parent = move(parent);
     }
 
     /// Ditto
@@ -2215,9 +2218,10 @@ struct BitmappedBlockWithInternalPointers(
     static if (!is(ParentAllocator == NullAllocator) && stateSize!ParentAllocator)
     this(ParentAllocator parent, size_t capacity)
     {
+        import std.algorithm.mutation : move;
         // Add room for the _allocStart vector
         _heap = BitmappedBlock!(theBlockSize, theAlignment, ParentAllocator)
-            (parent, capacity + capacity.divideRoundUp(64));
+            (move(parent), capacity + capacity.divideRoundUp(64));
     }
 
     // Makes sure there's enough room for _allocStart
