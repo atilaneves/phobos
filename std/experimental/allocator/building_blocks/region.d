@@ -679,45 +679,54 @@ struct BorrowedRegion(uint minAlign = platformAlignment,
 
 @safe unittest
 {
+    import std.experimental.allocator : makeArray;
     import std.experimental.allocator.mallocator : Mallocator;
     import std.meta : AliasSeq;
 
-    enum minAlign = 1;
-    enum storeSize = 64;
-    static foreach (direction; [No.growDownwards, Yes.growDownwards])
+    static void testRegion(R)() @safe
     {
-        static foreach (R; AliasSeq!(
-            BorrowedRegion!(minAlign, direction),
-            Region!(Mallocator, minAlign, direction),
-            SharedBorrowedRegion!(minAlign, direction),
-            SharedRegion!(Mallocator, minAlign, direction)))
-        {
-            static assert(__traits(compiles,
-                (ref R region) @system
+        enum allocationSize = 8;
+        static assert(!__traits(isCopyable, R));
+        // Preparing the allocation may require @system; using a live alias does not.
+        static assert(__traits(compiles,
+            (ref R region) @system
+            {
+                auto allocation = region.makeArray!ubyte(allocationSize);
+                auto aliasToAllocation = allocation;
+                () @safe
+                {
+                    aliasToAllocation[] = 1;
+                }();
+            }));
+        // @safe code cannot deallocate storage and then use a retained alias.
+        static assert(!__traits(compiles,
+            (ref R region) @system
+            {
+                auto allocation = region.makeArray!ubyte(allocationSize);
+                auto aliasToAllocation = allocation;
+                () @safe
                 {
                     region.deallocateAll();
-                }));
-            static assert(!__traits(compiles,
-                (ref R region) @safe
-                {
-                    region.deallocateAll();
-                }));
-            static assert(!__traits(isCopyable, R));
-        }
+                    aliasToAllocation[] = 1;
+                }();
+            }));
     }
 
-    alias R = InSituRegion!(storeSize, minAlign);
-    static assert(__traits(compiles,
-        (ref R region) @system
-        {
-            region.deallocateAll();
-        }));
-    static assert(!__traits(compiles,
-        (ref R region) @safe
-        {
-            region.deallocateAll();
-        }));
-    static assert(!__traits(isCopyable, R));
+    enum minAlign = 1;
+    enum storeSize = 64;
+    static foreach (R; AliasSeq!(
+        BorrowedRegion!minAlign,
+        BorrowedRegion!(minAlign, Yes.growDownwards),
+        Region!(Mallocator, minAlign),
+        Region!(Mallocator, minAlign, Yes.growDownwards),
+        SharedBorrowedRegion!minAlign,
+        SharedBorrowedRegion!(minAlign, Yes.growDownwards),
+        SharedRegion!(Mallocator, minAlign),
+        SharedRegion!(Mallocator, minAlign, Yes.growDownwards),
+        InSituRegion!(storeSize, minAlign)))
+    {
+        testRegion!R();
+    }
 }
 
 ///
@@ -1261,7 +1270,9 @@ version (Posix) @system nothrow @nogc unittest
 /**
 The threadsafe version of the `Region` allocator.
 Allocations and deallocations are lock-free based using $(REF cas, core,atomic).
-`SharedRegion` is noncopyable because it owns its backing storage and allocation state.
+`SharedRegion` is noncopyable because copying would duplicate responsibility for
+freeing its backing storage and create independent allocation cursors over the
+same memory.
 */
 shared struct SharedRegion(ParentAllocator,
     uint minAlign = platformAlignment,
