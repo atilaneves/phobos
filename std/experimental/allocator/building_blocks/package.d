@@ -115,7 +115,9 @@ $(TR $(TDC bool deallocate(void[] b);) $(TD If $(D b is null), does
 nothing and returns `true`. Otherwise, deallocates memory previously allocated
 with this allocator and returns `true` if successful, `false` otherwise. An
 implementation that would not support deallocation (i.e. would always return
-`false` should not define this primitive at all.)))
+`false`) should not define this primitive at all. Absence means individual
+deallocation is unavailable; storage may instead be reclaimed automatically,
+in bulk, or by a parent owner. It does not imply a particular lifetime policy.))
 
 $(TR $(TDC bool deallocateAll();, $(POST empty)) $(TD Deallocates all memory
 allocated with this allocator. If an allocator implements this method, it must
@@ -145,24 +147,24 @@ advance.
 
 Sizes through 3584 bytes are handled via freelists of staggered sizes. Sizes
 from 3585 bytes through 4072 KB are handled by a `BitmappedBlock` with a
-block size of 4 KB. Sizes above that are passed direct to the `GCAllocator`.
+block size of 4 KB. Sizes above that are passed direct to the `GCHeapMallocator`.
 
 $(RUNNABLE_EXAMPLE
     ----
     import std.experimental.allocator;
     import std.algorithm.comparison : max;
 
-    alias FList = FreeList!(GCAllocator, 0, unbounded);
+    alias FList = FreeList!(GCHeapMallocator, 0, unbounded);
     alias A = Segregator!(
-        8, FreeList!(GCAllocator, 0, 8),
+        8, FreeList!(GCHeapMallocator, 0, 8),
         128, Bucketizer!(FList, 1, 128, 16),
         256, Bucketizer!(FList, 129, 256, 32),
         512, Bucketizer!(FList, 257, 512, 64),
         1024, Bucketizer!(FList, 513, 1024, 128),
         2048, Bucketizer!(FList, 1025, 2048, 256),
         3584, Bucketizer!(FList, 2049, 3584, 512),
-        4072 * 1024, AllocatorList!(n => Region!GCAllocator(max(n, 1024 * 4096))),
-        GCAllocator
+        4072 * 1024, AllocatorList!(n => Region!GCHeapMallocator(max(n, 1024 * 4096))),
+        GCHeapMallocator
     );
     A tuMalloc;
     auto b = tuMalloc.allocate(500);
@@ -217,7 +219,8 @@ starting point for defining other allocators or for studying the API.))
 
 $(TR $(TDC3 GCAllocator, gc_allocator) $(TD The system-provided garbage-collector allocator.
 This should be the default fallback allocator tapping into system memory. It
-offers manual `free` and dutifully collects litter.))
+reclaims unreachable storage automatically and does not offer individual
+deallocation or moving reallocation.))
 
 $(TR $(TDC3 GCHeapMallocator, gc_allocator) $(TD Allocates GC-scanned memory
 that the caller releases manually.))

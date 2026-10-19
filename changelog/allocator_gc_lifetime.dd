@@ -1,0 +1,19 @@
+`GCAllocator` now leaves reclamation to the garbage collector
+
+$(REF_ALTTEXT `GCAllocator`, GCAllocator, std, experimental, allocator, gc_allocator)
+no longer provides `deallocate` or moving `reallocate`. Use
+$(REF_ALTTEXT `GCHeapMallocator`, GCHeapMallocator, std, experimental, allocator, gc_allocator)
+when individual release or moving reallocation of GC-scanned storage is needed.
+
+Individual deallocation is optional in the static allocator protocol. Its
+absence does not specify how storage is eventually reclaimed. Construction
+helpers accept such allocators and destroy constructed array elements when
+initialization fails, releasing storage individually only when supported.
+`dispose` requires `deallocate`, as does the parent of `ScopedAllocator`.
+`StatsCollector` now exposes `deallocate` only when its parent does.
+The fixed dynamic allocator interfaces continue to return `false` when the
+underlying allocator does not provide individual deallocation.
+
+Generic reallocation in `std.experimental.allocator.common` still supports
+allocators without individual deallocation by allocating a replacement and
+retaining the old storage for the allocator's lifetime policy to handle.

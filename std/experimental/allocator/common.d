@@ -406,7 +406,8 @@ The default `reallocate` function first attempts to use `expand`. If $(D
 Allocator.expand) is not defined or returns `false`, `reallocate`
 allocates a new block of memory of appropriate size and copies data from the old
 block to the new block. Finally, if `Allocator` defines `deallocate`, $(D
-reallocate) uses it to free the old memory block.
+reallocate) uses it to free the old memory block. Otherwise the old storage
+remains subject to the allocator's lifetime policy.
 
 `reallocate` does not attempt to use `Allocator.reallocate` even if
 defined. This is deliberate so allocators may use it internally within their own
@@ -437,7 +438,8 @@ If `Allocator.expand` is not defined or returns `false`,  $(D
 alignedReallocate) allocates a new block of memory of appropriate size and
 copies data from the old block to the new block. Finally, if `Allocator`
 defines `deallocate`, `alignedReallocate` uses it to free the old memory
-block.
+block. Otherwise the old storage remains subject to the allocator's lifetime
+policy.
 
 `alignedReallocate` does not attempt to use `Allocator.reallocate` even if
 defined. This is deliberate so allocators may use it internally within their own
