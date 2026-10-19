@@ -90,10 +90,14 @@ jobs:
             # PR: clone the DMD head with the same name as this Phobos PR's target branch
             # e.g., DMD stable when targeting Phobos stable
             REPO_BRANCH="$GITHUB_BASE_REF"
-          elif [[ "$ref" =~ ^refs/(heads|tags)/(.*)$ ]]; then
-            # no PR: clone the DMD head with the same name as this Phobos head
-            # e.g., DMD stable for a push to Phobos stable, or DMD v2.105.2 for Phobos tag v2.105.2
-            REPO_BRANCH="${BASH_REMATCH[2]}"
+          elif [[ "$ref" =~ ^refs/tags/(.*)$ ]]; then
+            # Release tags use the matching DMD release.
+            REPO_BRANCH="${BASH_REMATCH[1]}"
+          elif [[ "$ref" == refs/heads/stable ]]; then
+            REPO_BRANCH=stable
+          elif [[ "$ref" =~ ^refs/heads/ ]]; then
+            # Feature branches use DMD master, like Phobos master.
+            REPO_BRANCH=master
           else
             echo "Error: unexpected GitHub ref '$ref'" >&2
             exit 1
