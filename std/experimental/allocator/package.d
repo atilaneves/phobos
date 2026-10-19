@@ -4034,6 +4034,56 @@ unittest
     assert(affixed.allocateAll() is null);
 }
 
+// Advancing a range can throw after its element was successfully constructed.
+@system unittest
+{
+    import std.exception : assertThrown;
+    import std.experimental.allocator.mallocator : Mallocator;
+
+    struct CountingAllocator
+    {
+        enum alignment = Mallocator.alignment;
+        size_t deallocations;
+        void[] allocate(size_t n) { return Mallocator.instance.allocate(n); }
+        bool deallocate(void[] b)
+        {
+            ++deallocations;
+            return Mallocator.instance.deallocate(b);
+        }
+    }
+
+    static size_t destroyed;
+    struct Element
+    {
+        bool constructed;
+        this(this) { constructed = true; }
+        ~this() { if (constructed) ++destroyed; }
+    }
+
+    struct ThrowingRange(bool forward)
+    {
+        Element[] values;
+        bool empty() { return values.length == 0; }
+        ref Element front() { return values[0]; }
+        void popFront() { throw new Exception("range advance failed"); }
+        static if (forward)
+        {
+            ThrowingRange save() { return this; }
+            size_t length() { return values.length; }
+        }
+    }
+
+    static foreach (forward; [false, true])
+    {{
+        CountingAllocator alloc;
+        Element[2] source;
+        destroyed = 0;
+        assertThrown(alloc.makeArray!Element(ThrowingRange!forward(source[])));
+        assert(destroyed == 1);
+        assert(alloc.deallocations == 1);
+    }}
+}
+
 @system unittest
 {
     import std.experimental.allocator.gc_allocator : GCAllocator;
