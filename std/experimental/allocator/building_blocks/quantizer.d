@@ -241,8 +241,8 @@ struct Quantizer(ParentAllocator, alias roundingFunction)
 version (StdUnittest)
 @system unittest
 {
-    import std.experimental.allocator.gc_allocator : GCAllocator;
-    alias MyAlloc = Quantizer!(GCAllocator,
+    import std.experimental.allocator.gc_allocator : GCHeapMallocator;
+    alias MyAlloc = Quantizer!(GCHeapMallocator,
         (size_t n) => n.roundUpToMultipleOf(64));
     testAllocator!(() => MyAlloc());
 

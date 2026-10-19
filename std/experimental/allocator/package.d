@@ -263,11 +263,11 @@ public import std.experimental.allocator.common,
     import std.experimental.allocator.building_blocks.bucketizer : Bucketizer;
     import std.experimental.allocator.building_blocks.free_list : FreeList;
     import std.experimental.allocator.building_blocks.segregator : Segregator;
-    import std.experimental.allocator.gc_allocator : GCAllocator;
+    import std.experimental.allocator.gc_allocator : GCHeapMallocator;
 
-    alias FList = FreeList!(GCAllocator, 0, unbounded);
+    alias FList = FreeList!(GCHeapMallocator, 0, unbounded);
     alias A = Segregator!(
-        8, FreeList!(GCAllocator, 0, 8),
+        8, FreeList!(GCHeapMallocator, 0, 8),
         128, Bucketizer!(FList, 1, 128, 16),
         256, Bucketizer!(FList, 129, 256, 32),
         512, Bucketizer!(FList, 257, 512, 64),
@@ -276,9 +276,9 @@ public import std.experimental.allocator.common,
         3584, Bucketizer!(FList, 2049, 3584, 512),
         4072 * 1024, AllocatorList!(
             (n) => BitmappedBlock!(4096)(
-                    cast(ubyte[])(GCAllocator.instance.allocate(
+                    cast(ubyte[])(GCHeapMallocator.instance.allocate(
                         max(n, 4072 * 1024))))),
-        GCAllocator
+        GCHeapMallocator
     );
     A tuMalloc;
     auto b = tuMalloc.allocate(500);
@@ -1162,8 +1162,8 @@ Returns: If `T` is a class type, returns a reference to the created `T`
 object. Otherwise, returns a `T*` pointing to the created object. In all
 cases, returns `null` if allocation failed.
 
-Throws: If `T`'s constructor throws, deallocates the allocated memory and
-propagates the exception.
+Throws: If `T`'s constructor throws, propagates the exception and deallocates
+the allocated memory if `alloc` supports individual deallocation.
 */
 auto make(T, Allocator, A...)(auto ref Allocator alloc, auto ref A args)
 {
@@ -1198,16 +1198,19 @@ auto make(T, Allocator, A...)(auto ref Allocator alloc, auto ref A args)
 
         scope(failure)
         {
-            static if (is(typeof(() pure { return construct(); })))
+            static if (__traits(hasMember, Allocator, "deallocate"))
             {
-                // Assume deallocation is safe because:
-                // 1) in case of failure, `m` is the only reference to this memory
-                // 2) `m` is known to originate from `alloc`
-                () @trusted { alloc.deallocate(m); }();
-            }
-            else
-            {
-                alloc.deallocate(m);
+                static if (is(typeof(() pure { return construct(); })))
+                {
+                    // Assume deallocation is safe because:
+                    // 1) in case of failure, `m` is the only reference to this memory
+                    // 2) `m` is known to originate from `alloc`
+                    () @trusted { alloc.deallocate(m); }();
+                }
+                else
+                {
+                    alloc.deallocate(m);
+                }
             }
         }
 
@@ -1357,7 +1360,8 @@ nothrow @safe @nogc unittest
     void test(T, Args...)(auto ref Args args)
     {
         auto k = alloc.make!T(args);
-        (a) @trusted { a.dispose(k); }(alloc);
+        // Collection owns the storage; no individual disposal is available.
+        assert(k !is null);
     }
 
     test!int();
@@ -1575,8 +1579,9 @@ allocation failed.
 
 Throws:
 The first two overloads throw only if `alloc`'s primitives do. The
-overloads that involve copy initialization deallocate memory and propagate the
-exception if the copy operation throws.
+overloads that involve copy initialization destroy constructed elements and
+propagate the exception if copying throws. They also deallocate the storage
+if `alloc` supports individual deallocation.
 */
 T[] makeArray(T, Allocator)(auto ref Allocator alloc, size_t length)
 {
@@ -1686,10 +1691,13 @@ T[] makeArray(T, Allocator)(auto ref Allocator alloc, size_t length, T init)
     {
         scope(failure)
         {
-            static if (canSafelyDeallocPostRewind!T)
-                () @trusted { alloc.deallocate(m); } ();
-            else
-                alloc.deallocate(m);
+            static if (__traits(hasMember, Allocator, "deallocate"))
+            {
+                static if (canSafelyDeallocPostRewind!T)
+                    () @trusted { alloc.deallocate(m); } ();
+                else
+                    alloc.deallocate(m);
+            }
         }
 
         size_t i = 0;
@@ -1842,13 +1850,16 @@ if (isInputRange!R && !isInfinite!R)
             foreach (j; 0 .. i)
             {
                 auto p = () @trusted { return cast(Unqual!T*) &result[j]; }();
-                destroy(p);
+                destroy(*p);
             }
 
-            static if (canSafelyDeallocPostRewind!T)
-                () @trusted { alloc.deallocate(m); } ();
-            else
-                alloc.deallocate(m);
+            static if (__traits(hasMember, Allocator, "deallocate"))
+            {
+                static if (canSafelyDeallocPostRewind!T)
+                    () @trusted { alloc.deallocate(m); } ();
+                else
+                    alloc.deallocate(m);
+            }
         }
 
         import core.internal.lifetime : emplaceRef;
@@ -1856,14 +1867,16 @@ if (isInputRange!R && !isInfinite!R)
         {
             foreach (j; 0 .. range.length)
             {
-                emplaceRef!T(result[i++], range[j]);
+                emplaceRef!T(result[i], range[j]);
+                ++i;
             }
         }
         else
         {
-            for (; !range.empty; range.popFront, ++i)
+            for (; !range.empty; range.popFront)
             {
                 emplaceRef!T(result[i], range.front);
+                ++i;
             }
         }
 
@@ -1880,19 +1893,22 @@ if (isInputRange!R && !isInfinite!R)
         size_t initialized = 0;
         void bailout()
         {
-            foreach (i; 0 .. initialized + 1)
+            foreach (i; 0 .. initialized)
             {
                 destroy(result[i]);
             }
 
-            static if (canSafelyDeallocPostRewind!T)
-                () @trusted { alloc.deallocate(m); } ();
-            else
-                alloc.deallocate(m);
+            static if (__traits(hasMember, Allocator, "deallocate"))
+            {
+                static if (canSafelyDeallocPostRewind!T)
+                    () @trusted { alloc.deallocate(m); } ();
+                else
+                    alloc.deallocate(m);
+            }
         }
         scope (failure) bailout;
 
-        for (; !range.empty; range.popFront, ++initialized)
+        for (; !range.empty; range.popFront)
         {
             if (initialized == estimated)
             {
@@ -1910,6 +1926,7 @@ if (isInputRange!R && !isInfinite!R)
             }
             import core.internal.lifetime : emplaceRef;
             emplaceRef(result[initialized], range.front);
+            ++initialized;
         }
 
         if (initialized < estimated)
@@ -2359,7 +2376,8 @@ bool shrinkArray(T, Allocator)(auto ref Allocator alloc,
 
     if (delta == array.length)
     {
-        alloc.deallocate(array);
+        static if (__traits(hasMember, Allocator, "deallocate"))
+            alloc.deallocate(array);
         array = null;
         return true;
     }
@@ -2406,10 +2424,12 @@ bool shrinkArray(T, Allocator)(auto ref Allocator alloc,
 Destroys and then deallocates (using `alloc`) the object pointed to by a
 pointer, the class object referred to by a `class` or `interface`
 reference, or an entire array. It is assumed the respective entities had been
-allocated with the same allocator.
+allocated with the same allocator. The allocator must provide `deallocate`;
+otherwise this operation is unavailable.
 
 */
 void dispose(A, T)(auto ref A alloc, auto ref T* p)
+if (__traits(hasMember, A, "deallocate"))
 {
     static if (__traits(needsDestruction, T))
     {
@@ -2422,7 +2442,8 @@ void dispose(A, T)(auto ref A alloc, auto ref T* p)
 
 /// Ditto
 void dispose(A, T)(auto ref A alloc, auto ref T p)
-if (is(T == class) || is(T == interface))
+if ((is(T == class) || is(T == interface))
+    && __traits(hasMember, A, "deallocate"))
 {
     if (!p) return;
     static if (is(T == interface))
@@ -2446,6 +2467,7 @@ if (is(T == class) || is(T == interface))
 
 /// Ditto
 void dispose(A, T)(auto ref A alloc, auto ref T[] array)
+if (__traits(hasMember, A, "deallocate"))
 {
     static if (__traits(needsDestruction, typeof(array[0])))
     {
@@ -2608,6 +2630,7 @@ alloc = the allocator used for getting memory
 array = the multidimensional array that is to be deallocated
 */
 void disposeMultidimensionalArray(T, Allocator)(auto ref Allocator alloc, auto ref T[] array)
+if (__traits(hasMember, Allocator, "deallocate"))
 {
     static if (isArray!T)
     {
@@ -3064,7 +3087,8 @@ nothrow:
                     memcpy(&tmp, &this.impl, Allocator.sizeof);
                 }
                 void[] support = (cast(void*) this)[0 .. stateSize!(typeof(this))];
-                tmp.deallocate(support);
+                static if (__traits(hasMember, Allocator, "deallocate"))
+                    tmp.deallocate(support);
                 return false;
             }
 
@@ -3296,7 +3320,8 @@ nothrow:
                     memcpy(cast(void*) &this.impl, cast(void*) &empty, Allocator.sizeof);
                 }
                 void[] support = (cast(void*) this)[0 .. stateSize!(typeof(this))];
-                (cast(bool delegate(void[]) @nogc nothrow pure)(&tmp.deallocate))(support);
+                static if (__traits(hasMember, Allocator, "deallocate"))
+                    (cast(bool delegate(void[]) @nogc nothrow pure)(&tmp.deallocate))(support);
                 return false;
             }
             return true;
@@ -3656,6 +3681,7 @@ private struct InternalPointersTree(Allocator)
     }
 
     /// Ditto
+    static if (__traits(hasMember, Allocator, "deallocate"))
     bool deallocate(void[] b)
     {
         if (!b.ptr) return true;
@@ -3787,7 +3813,7 @@ unittest
     import std.experimental.allocator.building_blocks.segregator : Segregator;
     import std.experimental.allocator.building_blocks.bucketizer : Bucketizer;
     import std.experimental.allocator.building_blocks.free_list : FreeList;
-    import std.experimental.allocator.gc_allocator : GCAllocator;
+    import std.experimental.allocator.gc_allocator : GCHeapMallocator;
     import std.experimental.allocator.mallocator : Mallocator;
 
     static void testSpeed(A)()
@@ -3819,9 +3845,9 @@ unittest
 
     import std.algorithm.comparison : max;
 
-    alias FList = FreeList!(GCAllocator, 0, unbounded);
+    alias FList = FreeList!(GCHeapMallocator, 0, unbounded);
     alias A = Segregator!(
-        8, FreeList!(GCAllocator, 0, 8),
+        8, FreeList!(GCHeapMallocator, 0, 8),
         128, Bucketizer!(FList, 1, 128, 16),
         256, Bucketizer!(FList, 129, 256, 32),
         512, Bucketizer!(FList, 257, 512, 64),
@@ -3829,9 +3855,9 @@ unittest
         2048, Bucketizer!(FList, 1025, 2048, 256),
         3584, Bucketizer!(FList, 2049, 3584, 512),
         4072 * 1024, AllocatorList!(
-            (size_t n) => BitmappedBlock!(4096)(cast(ubyte[]) GCAllocator.instance.allocate(
+            (size_t n) => BitmappedBlock!(4096)(cast(ubyte[]) GCHeapMallocator.instance.allocate(
                 max(n, 4072 * 1024)))),
-        GCAllocator
+        GCHeapMallocator
     );
 
     import std.stdio;
@@ -3842,7 +3868,7 @@ unittest
     if (false) writeln(benchmark!(
         testSpeed!NullAllocator,
         testSpeed!Mallocator,
-        testSpeed!GCAllocator,
+        testSpeed!GCHeapMallocator,
         testSpeed!(ThreadLocal!A),
         testSpeed!(A),
     )(20)[].map!(t => t.to!Duration));
@@ -3888,7 +3914,7 @@ unittest
     auto alloc = allocatorObject(GCAllocator.instance);
     auto b = alloc.allocate(42);
     assert(b.length == 42);
-    assert(alloc.deallocate(b));
+    assert(!alloc.deallocate(b));
 
     import std.algorithm.comparison : max;
     // Define an elaborate allocator and bind it to the class API.
@@ -3911,5 +3937,174 @@ unittest
 
     auto alloc2 = allocatorObject(A.instance);
     b = alloc2.allocate(101);
-    assert(alloc2.deallocate(b));
+    assert(!alloc2.deallocate(b));
+}
+
+// Allocation-only allocators can construct values and unwind partial arrays.
+@system unittest
+{
+    import std.exception : assertThrown;
+    import std.range : inputRangeObject, InputRange;
+
+    struct AllocationOnly
+    {
+        enum alignment = platformAlignment;
+        void[] remaining;
+        void[] allocate(size_t n)
+        {
+            if (!n || n > remaining.length) return null;
+            auto result = remaining[0 .. n];
+            remaining = remaining[n.roundUpToMultipleOf(alignment) .. $];
+            return result;
+        }
+        void[] allocateAll()
+        {
+            auto result = remaining;
+            remaining = null;
+            return result;
+        }
+    }
+
+    align(platformAlignment) ubyte[4096] storage;
+    auto alloc = AllocationOnly(storage[]);
+    assert(*alloc.make!int(42) == 42);
+    assert(alloc.makeArray!int(3, 7) == [7, 7, 7]);
+    assert(alloc.makeArray!int([1, 2, 3]) == [1, 2, 3]);
+    auto oldBlock = alloc.allocate(4);
+    (cast(ubyte[]) oldBlock)[] = 7;
+    auto replacement = oldBlock;
+    assert(reallocate(alloc, replacement, 32));
+    assert(replacement.ptr !is oldBlock.ptr);
+    assert((cast(ubyte[]) replacement)[0 .. 4] == [7, 7, 7, 7]);
+    (cast(ubyte[]) replacement)[] = 9;
+    assert((cast(ubyte[]) oldBlock)[] == [7, 7, 7, 7]);
+    int* p;
+    int[] a;
+    class C {}
+    C c;
+    static assert(!__traits(compiles, alloc.dispose(p)));
+    static assert(!__traits(compiles, alloc.dispose(a)));
+    static assert(!__traits(compiles, alloc.dispose(c)));
+    static assert(!__traits(compiles, alloc.disposeMultidimensionalArray(a)));
+    TypedAllocator!AllocationOnly typed;
+    static assert(!__traits(compiles, typed.dispose(p)));
+    static assert(!__traits(compiles, typed.dispose(a)));
+    static assert(!__traits(compiles, typed.dispose(c)));
+
+    struct FailingConstructor
+    {
+        this(int) { throw new Exception("construction failed"); }
+    }
+    assertThrown(alloc.make!FailingConstructor(1));
+
+    static size_t copies, destroyed;
+    struct Element
+    {
+        bool constructed;
+        this(this)
+        {
+            if (++copies == 3) throw new Exception("copy failed");
+            constructed = true;
+        }
+        ~this() { if (constructed) ++destroyed; }
+    }
+    // Passing an rvalue avoids consuming one of the copies in the argument.
+    copies = destroyed = 0;
+    assertThrown(alloc.makeArray!Element(5, Element.init));
+    assert(copies == 3 && destroyed == 2);
+
+    Element[5] source;
+    copies = destroyed = 0;
+    assertThrown(alloc.makeArray!Element(source[]));
+    assert(copies == 3 && destroyed == 2);
+
+    // Erasing forward-range capabilities exercises the growing input path.
+    copies = destroyed = 0;
+    InputRange!Element input = inputRangeObject(source[]);
+    static assert(!isForwardRange!(typeof(input)));
+    assertThrown(alloc.makeArray!Element(input));
+    assert(copies == 3 && destroyed == 2);
+
+    auto ints = alloc.makeArray!int(3, 9);
+    assert(alloc.shrinkArray(ints, ints.length));
+    assert(ints is null);
+
+    import std.experimental.allocator.building_blocks.affix_allocator : AffixAllocator;
+    auto affixed = AffixAllocator!(AllocationOnly, size_t)(AllocationOnly(storage[0 .. 1]));
+    assert(affixed.allocateAll() is null);
+}
+
+@system unittest
+{
+    import std.experimental.allocator.gc_allocator : GCAllocator;
+    import std.experimental.allocator.building_blocks.affix_allocator : AffixAllocator;
+    import std.experimental.allocator.building_blocks.stats_collector : StatsCollector, Options;
+    import std.experimental.allocator.building_blocks.quantizer : Quantizer;
+    import std.experimental.allocator.building_blocks.segregator : Segregator;
+    import std.experimental.allocator.building_blocks.scoped_allocator : ScopedAllocator;
+    import std.experimental.allocator.building_blocks.free_list : ContiguousFreeList, FreeList;
+
+    alias Affixed = AffixAllocator!(GCAllocator, size_t);
+    alias Counted = StatsCollector!(GCAllocator, Options.all);
+    alias PerCall = StatsCollector!(GCAllocator, Options.all, Options.all);
+    static assert(!__traits(hasMember, PerCall, "deallocate"));
+    alias Quantized = Quantizer!(GCAllocator, n => n.roundUpToMultipleOf(64));
+    alias Segregated = Segregator!(128, GCAllocator, GCAllocator);
+    static assert(!__traits(hasMember, Affixed, "deallocate"));
+    static assert(!__traits(hasMember, Counted, "deallocate"));
+    static assert(!__traits(hasMember, Quantized, "deallocate"));
+    static assert(!__traits(hasMember, Segregated, "deallocate"));
+    static assert(!__traits(compiles, ScopedAllocator!GCAllocator));
+
+    Counted counted;
+    assert(counted.allocate(16).length == 16);
+    assert(counted.bytesUsed == 16);
+    auto dynamic = allocatorObject(&counted);
+    const used = counted.bytesUsed;
+    auto b = dynamic.allocate(32);
+    assert(!dynamic.deallocate(b));
+    assert(counted.bytesUsed == used + 32);
+    {
+        auto copy = dynamic;
+        assert(!copy.deallocate(b));
+    }
+
+    auto sharedDynamic = sharedAllocatorObject(GCAllocator.instance);
+    b = sharedDynamic.allocate(16);
+    assert(!sharedDynamic.deallocate(b));
+
+    struct SharedAllocationOnly
+    {
+        size_t state;
+        enum alignment = platformAlignment;
+        void[] allocate(size_t n) shared nothrow
+        {
+            return GCAllocator.instance.allocate(n);
+        }
+        size_t goodAllocSize(size_t n) shared nothrow
+        {
+            return GCAllocator.instance.goodAllocSize(n);
+        }
+    }
+    shared SharedAllocationOnly sharedOwner;
+    auto sharedStateful = sharedAllocatorObject(&sharedOwner);
+    b = sharedStateful.allocate(16);
+    assert(!sharedStateful.deallocate(b));
+    {
+        auto copy = sharedStateful;
+        assert(!copy.deallocate(b));
+    }
+
+    // Reuse is a capability of a free list even without parent deallocation.
+    FreeList!(GCAllocator, 16, 16, Yes.adaptive) freeList;
+    b = freeList.allocate(16);
+    assert(freeList.deallocate(b));
+    assert(freeList.allocate(16).ptr is b.ptr);
+    assert(!freeList.deallocate(GCAllocator.instance.allocate(32)));
+
+    auto contiguous = ContiguousFreeList!(GCAllocator, 16, 16)(128);
+    b = contiguous.allocate(16);
+    assert(contiguous.deallocate(b));
+    assert(contiguous.allocate(16).ptr is b.ptr);
+    assert(!contiguous.deallocate(GCAllocator.instance.allocate(32)));
 }

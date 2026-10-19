@@ -16,9 +16,11 @@ deallocateAll) function is also implemented with the same semantics.)
 `deallocate` is also supported, which is where most implementation effort
 and overhead of `ScopedAllocator` go. If `deallocate` is not needed, a
 simpler design combining `AllocatorList` with `Region` is recommended.
+The parent must support individual deallocation.
 
 */
 struct ScopedAllocator(ParentAllocator)
+if (__traits(hasMember, ParentAllocator, "deallocate"))
 {
     static if (!stateSize!ParentAllocator)
     {
@@ -226,8 +228,8 @@ struct ScopedAllocator(ParentAllocator)
 version (StdUnittest)
 @system unittest
 {
-    import std.experimental.allocator.gc_allocator : GCAllocator;
-    testAllocator!(() => ScopedAllocator!GCAllocator());
+    import std.experimental.allocator.gc_allocator : GCHeapMallocator;
+    testAllocator!(() => ScopedAllocator!GCHeapMallocator());
 }
 
 @system unittest // https://issues.dlang.org/show_bug.cgi?id=16046
@@ -244,8 +246,8 @@ version (StdUnittest)
 
 @system unittest
 {
-    import std.experimental.allocator.gc_allocator : GCAllocator;
-    ScopedAllocator!GCAllocator a;
+    import std.experimental.allocator.gc_allocator : GCHeapMallocator;
+    ScopedAllocator!GCHeapMallocator a;
 
     assert(__traits(compiles, (() nothrow @safe @nogc => a.goodAllocSize(0))()));
 

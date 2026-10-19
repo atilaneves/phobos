@@ -23,9 +23,8 @@ struct GCAllocator
     enum uint alignment = platformAlignment;
 
     /**
-    Standard allocator methods per the semantics defined above. The $(D
-    deallocate) and `reallocate` methods are `@system` because they may
-    move memory around, leaving dangling pointers in user code.
+    Standard allocator methods. Storage is reclaimed automatically by the GC;
+    individual deallocation and moving reallocation are not provided.
     */
     pure nothrow @trusted void[] allocate(size_t bytes) shared const
     {
@@ -58,23 +57,6 @@ struct GCAllocator
     }
 
     /// Ditto
-    pure nothrow @system bool reallocate(ref void[] b, size_t newSize) shared const
-    {
-        import core.exception : OutOfMemoryError;
-        try
-        {
-            auto p = cast(ubyte*) GC.realloc(b.ptr, newSize);
-            b = p[0 .. newSize];
-        }
-        catch (OutOfMemoryError)
-        {
-            // leave the block in place, tell caller
-            return false;
-        }
-        return true;
-    }
-
-    /// Ditto
     pure nothrow @trusted @nogc
     Ternary resolveInternalPointer(const void* p, ref void[] result) shared const
     {
@@ -82,14 +64,6 @@ struct GCAllocator
         if (!r) return Ternary.no;
         result = r[0 .. GC.sizeOf(r)];
         return Ternary.yes;
-    }
-
-    /// Ditto
-    pure nothrow @system @nogc
-    bool deallocate(void[] b) shared const
-    {
-        GC.free(b.ptr);
-        return true;
     }
 
     /// Ditto
@@ -137,8 +111,7 @@ struct GCAllocator
 pure @system unittest
 {
     auto buffer = GCAllocator.instance.allocate(1024 * 1024 * 4);
-    // deallocate upon scope's end (alternatively: leave it to collection)
-    scope(exit) GCAllocator.instance.deallocate(buffer);
+    // The GC reclaims the buffer when it is no longer reachable.
     //...
 }
 
@@ -161,7 +134,6 @@ pure @system unittest
         assert((() nothrow @safe @nogc => GCAllocator.instance.goodAllocSize(s - (s / 2) + 1))() == s);
 
         auto buffer = GCAllocator.instance.allocate(s);
-        scope(exit) () nothrow @nogc { GCAllocator.instance.deallocate(buffer); }();
 
         void[] p;
         assert((() nothrow @safe => GCAllocator.instance.resolveInternalPointer(null, p))() == Ternary.no);
@@ -174,7 +146,6 @@ pure @system unittest
         version (none)
         {
             auto buffer2 = GCAllocator.instance.allocate(s - (s / 2) + 1);
-            scope(exit) () nothrow @nogc { GCAllocator.instance.deallocate(buffer2); }();
 
             assert(GC.sizeOf(buffer2.ptr) == s);
         }
@@ -208,7 +179,7 @@ struct GCHeapMallocator
     import std.typecons : Ternary;
     version (StdUnittest) @system unittest { testAllocator!(() => GCHeapMallocator.instance); }
 
-    private GCAllocator impl;
+    private alias impl = GCAllocator.instance;
 
     /**
     The alignment is a static constant equal to `platformAlignment`, which
@@ -235,7 +206,19 @@ struct GCHeapMallocator
     /// Ditto
     pure nothrow @system bool reallocate(ref void[] b, size_t newSize) shared const
     {
-        return impl.reallocate(b, newSize);
+        import core.memory : GC;
+        import core.exception : OutOfMemoryError;
+        try
+        {
+            auto p = cast(ubyte*) GC.realloc(b.ptr, newSize);
+            b = p[0 .. newSize];
+        }
+        catch (OutOfMemoryError)
+        {
+            // leave the block in place, tell caller
+            return false;
+        }
+        return true;
     }
 
     /// Ditto
@@ -249,7 +232,9 @@ struct GCHeapMallocator
     pure nothrow @system @nogc
     bool deallocate(void[] b) shared const
     {
-        return impl.deallocate(b);
+        import core.memory : GC;
+        GC.free(b.ptr);
+        return true;
     }
 
     /// Ditto
@@ -328,4 +313,19 @@ pure nothrow @safe unittest
     assert(GCHeapMallocator.instance.resolveInternalPointer(null, result) == Ternary.no);
     void *badPtr = (() @trusted => cast(void*)(0xdeadbeef))();
     assert(GCHeapMallocator.instance.resolveInternalPointer(badPtr, result) == Ternary.no);
+}
+
+@system unittest
+{
+    import core.memory : GC;
+    static assert(!__traits(hasMember, GCAllocator, "deallocate"));
+    static assert(!__traits(hasMember, GCAllocator, "reallocate"));
+    static assert(stateSize!GCHeapMallocator == 0);
+    auto b = GCHeapMallocator.instance.allocate(32);
+    (cast(ubyte[]) b)[] = 42;
+    assert(GCHeapMallocator.instance.reallocate(b, 8192));
+    foreach (v; (cast(ubyte[]) b)[0 .. 32]) assert(v == 42);
+    auto p = b.ptr;
+    assert(GCHeapMallocator.instance.deallocate(b));
+    assert(GC.addrOf(p) is null);
 }

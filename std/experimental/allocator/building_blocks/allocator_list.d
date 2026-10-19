@@ -318,7 +318,8 @@ struct AllocatorList(Factory, BookkeepingAllocator = GCAllocator)
         }
         else
         {
-            bkalloc.deallocate(toFree);
+            static if (__traits(hasMember, BookkeepingAllocator, "deallocate"))
+                bkalloc.deallocate(toFree);
         }
     }
 
@@ -581,7 +582,8 @@ struct AllocatorList(Factory, BookkeepingAllocator = GCAllocator)
             n.a.deallocateAll;
             n.a.destroy;
         }
-        bkalloc.deallocate(allocators);
+        static if (__traits(hasMember, BookkeepingAllocator, "deallocate"))
+            bkalloc.deallocate(allocators);
         allocators = null;
         root = null;
         return true;
@@ -630,7 +632,7 @@ else version (Posix) @system unittest
     import std.experimental.allocator.building_blocks.null_allocator : NullAllocator;
     import std.experimental.allocator.building_blocks.region : Region;
     import std.experimental.allocator.building_blocks.segregator : Segregator;
-    import std.experimental.allocator.gc_allocator : GCAllocator;
+    import std.experimental.allocator.gc_allocator : GCHeapMallocator;
     import std.experimental.allocator.mmap_allocator : MmapAllocator;
 
     // Ouroboros allocator list based upon 4MB regions, fetched directly from
@@ -640,7 +642,7 @@ else version (Posix) @system unittest
 
     // Allocator list based upon 4MB regions, fetched from the garbage
     // collector. All memory is released upon destruction.
-    alias A2 = AllocatorList!((n) => Region!GCAllocator(max(n, 1024 * 4096)));
+    alias A2 = AllocatorList!((n) => Region!GCHeapMallocator(max(n, 1024 * 4096)));
 
     // Ouroboros allocator list based upon 4MB regions, fetched from the garbage
     // collector. Memory is left to the collector.
@@ -653,8 +655,8 @@ else version (Posix) @system unittest
         Segregator!(
             64, AllocatorList!(
                 (n) => ContiguousFreeList!(NullAllocator, 0, 64)(
-                    cast(ubyte[])(GCAllocator.instance.allocate(4096)))),
-            GCAllocator);
+                    cast(ubyte[])(GCHeapMallocator.instance.allocate(4096)))),
+            GCHeapMallocator);
 
     A4 a;
     auto small = a.allocate(64);

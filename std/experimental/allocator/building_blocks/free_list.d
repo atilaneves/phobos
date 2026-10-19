@@ -196,7 +196,7 @@ struct FreeList(ParentAllocator,
             accumSamples = 0;
             accumMisses = 0;
             // If probability to miss is under x%, yank one off the freelist
-            static if (!unchecked)
+            static if (!unchecked && __traits(hasMember, ParentAllocator, "deallocate"))
             {
                 if (probMiss < tooFewMisses && _root)
                 {
@@ -740,7 +740,10 @@ struct ContiguousFreeList(ParentAllocator,
             fl.root.next = t;
             return true;
         }
-        return parent.deallocate(b);
+        static if (__traits(hasMember, ParentAllocator, "deallocate"))
+            return parent.deallocate(b);
+        else
+            return false;
     }
 
     /**

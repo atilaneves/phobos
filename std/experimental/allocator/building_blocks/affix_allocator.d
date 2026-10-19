@@ -186,7 +186,8 @@ struct AffixAllocator(Allocator, Prefix, Suffix = void)
             if (result is null) return null;
             if (result.length < actualAllocationSize(1))
             {
-                deallocate(result);
+                static if (__traits(hasMember, Allocator, "deallocate"))
+                    parent.deallocate(result);
                 return null;
             }
             static if (stateSize!Prefix)
@@ -507,7 +508,8 @@ version (StdUnittest)
 @system unittest
 {
     import std.experimental.allocator.gc_allocator;
-    alias a = AffixAllocator!(GCAllocator, uint).instance;
+    import std.experimental.allocator.gc_allocator : GCHeapMallocator;
+    alias a = AffixAllocator!(GCHeapMallocator, uint).instance;
 
     // Check that goodAllocSize inherits from parent, i.e. GCAllocator
     assert(__traits(compiles, (() nothrow @safe @nogc => a.goodAllocSize(1))()));
