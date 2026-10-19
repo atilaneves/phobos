@@ -118,9 +118,12 @@ Use small, dependency-ordered pull requests against the experimental package:
    `fix-region-copy-reset-safety` at
    `445c4640397e243817b5130106331f57f7b89c6e` (also pushed to origin).
    Assess other stateful allocators separately using the same evidence standard.
-3. **Implemented here, pending independent review:** Remove the two
+3. **Implemented and independently reviewed here:** Remove the two
    `GCAllocator` methods and propagate optional individual deallocation.
-   See [implementation handoff](docs/allocator-gc-lifetime-handoff.md).
+   Astra found no must-fix defects; the separate Sol 6.1 fixer pass added
+   the suggested exception regression coverage and passed both compiler suites.
+   See [implementation handoff](docs/allocator-gc-lifetime-handoff.md) and
+   [independent review](docs/allocator-gc-api-review.md).
    Steps 2 and 3 may proceed in parallel.
 4. Submit any additional safety-audit fixes separately, each with concrete
    evidence.

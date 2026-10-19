@@ -1,8 +1,8 @@
 # GC lifetime API implementation handoff
 
 Implemented on `allocator-gc-lifetime-api`, based on `a27939075`.
-Independent review and the separate fixer pass remain pending. No push or merge
-is performed by this implementation worker.
+Implementation, independent Astra review, and the separate Sol 6.1 fixer pass
+are complete. No push or merge was performed by these workers.
 
 ## Implemented behavior
 
@@ -74,6 +74,43 @@ stateful and stateless dynamic adapters, shared adapter cleanup, and explicit
 GCHeapMallocator reallocation/data preservation/freeing. Existing allocation
 coverage using GCAllocator remains; tests requiring manual release use
 GCHeapMallocator.
+
+## Independent review and fixer completion
+
+Astra reviewed implementation HEAD `23df32829fddb205b8f18d2d0313688bb54b4087`
+against baseline `a27939075` and found no must-fix defects. The historical
+[review report](allocator-gc-api-review.md) retains its original findings and
+verification limits.
+
+The separate Sol 6.1 fixer pass accepted Astra's optional regression-test
+suggestion. A permanent `makeArray` test now uses a range whose `popFront`
+throws after the first element is constructed. Both the sized forward path
+and the input-only path must destroy exactly one element and call the counting
+manual allocator's `deallocate` exactly once. Existing throwing-copy coverage
+checks a different failure point. No further production changes were needed.
+
+The fixer rebuilt and ran the full combined allocator suite from this worktree
+with both compilers using these exact commands:
+
+```sh
+dmd -i -unittest -version=StdUnittest -preview=dip1000 -main \
+  -of=/tmp/allocator-fixer-test \
+  std/experimental/allocator/*.d \
+  std/experimental/allocator/building_blocks/*.d
+/tmp/allocator-fixer-test
+
+ldc2 -i -unittest -d-version=StdUnittest -preview=dip1000 -main \
+  -of=/tmp/allocator-fixer-test-ldc \
+  std/experimental/allocator/*.d \
+  std/experimental/allocator/building_blocks/*.d
+/tmp/allocator-fixer-test-ldc
+
+git diff --check
+```
+
+Both runs reported `23 modules passed unittests`; whitespace checks passed.
+These commands explicitly compile this branch's sources, including package.d,
+rather than relying on an installed Phobos allocator module.
 
 ## Boundaries and remaining gates
 
