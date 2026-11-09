@@ -1845,7 +1845,10 @@ if (isInputRange!R && !isInfinite!R)
         auto result = () @trusted { return cast(T[]) m; } ();
 
         size_t i = 0;
-        scope (failure)
+        // Keep `i` in the frame through a nested function so the cleanup sees
+        // the current count; with `-O -release`, DMD reads a stale value in a
+        // plain `scope (failure)` block.
+        void bailout()
         {
             foreach (j; 0 .. i)
             {
@@ -1861,6 +1864,7 @@ if (isInputRange!R && !isInfinite!R)
                     alloc.deallocate(m);
             }
         }
+        scope (failure) bailout();
 
         import core.internal.lifetime : emplaceRef;
         static if (isNarrowString!R || isRandomAccessRange!R)
