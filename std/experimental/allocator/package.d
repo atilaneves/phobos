@@ -1707,7 +1707,8 @@ T[] makeArray(T, Allocator)(auto ref Allocator alloc, size_t length, T init)
             {
                 foreach (j; 0 .. i)
                 {
-                    destroy(result[j]);
+                    auto p = () @trusted { return cast(Unqual!T*) &result[j]; }();
+                    destroy(*p);
                 }
             }
         }
@@ -1905,7 +1906,8 @@ if (isInputRange!R && !isInfinite!R)
             {
                 foreach (i; 0 .. initialized)
                 {
-                    destroy(result[i]);
+                    auto p = () @trusted { return cast(Unqual!T*) &result[i]; }();
+                    destroy(*p);
                 }
             }
 
@@ -1936,7 +1938,7 @@ if (isInputRange!R && !isInfinite!R)
                 result = () @trusted { return cast(T[]) m; } ();
             }
             import core.internal.lifetime : emplaceRef;
-            emplaceRef(result[initialized], range.front);
+            emplaceRef!T(result[initialized], range.front);
             ++initialized;
         }
 
@@ -4127,6 +4129,36 @@ unittest
         assertThrown(Mallocator.instance.makeArray!C(ThrowingRange!forward(objects[])));
         assert(finalized == 0);
     }}
+}
+
+// Partially constructed arrays of const elements with destructors unwind.
+@system unittest
+{
+    import std.exception : assertThrown;
+    import std.experimental.allocator.mallocator : Mallocator;
+    import std.range : inputRangeObject, InputRange;
+
+    static size_t copies, destroyed;
+    struct Element
+    {
+        bool constructed;
+        this(this)
+        {
+            if (++copies == 3) throw new Exception("copy failed");
+            constructed = true;
+        }
+        ~this() { if (constructed) ++destroyed; }
+    }
+
+    copies = destroyed = 0;
+    assertThrown(Mallocator.instance.makeArray!(const Element)(5, Element.init));
+    assert(copies == 3 && destroyed == 2);
+
+    Element[5] source;
+    copies = destroyed = 0;
+    InputRange!Element input = inputRangeObject(source[]);
+    assertThrown(Mallocator.instance.makeArray!(const Element)(input));
+    assert(copies == 3 && destroyed == 2);
 }
 
 @system unittest
