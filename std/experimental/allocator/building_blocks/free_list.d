@@ -198,10 +198,10 @@ struct FreeList(ParentAllocator,
             // If probability to miss is under x%, yank one off the freelist
             static if (!unchecked && __traits(hasMember, ParentAllocator, "deallocate"))
             {
-                if (probMiss < tooFewMisses && _root)
+                if (probMiss < tooFewMisses && root)
                 {
-                    auto b = blockFor(_root);
-                    _root = _root.next;
+                    auto b = blockFor(root);
+                    root = root.next;
                     parent.deallocate(b);
                 }
             }
@@ -495,6 +495,45 @@ struct FreeList(ParentAllocator,
     assert((() nothrow @nogc => fl.reallocate(b, 100))());
     assert(b.length == 100);
     assert((() nothrow @nogc => fl.deallocateAll())());
+}
+
+// An adaptive free list returns surplus nodes to a deallocating parent.
+@system unittest
+{
+    import std.experimental.allocator.mallocator : Mallocator;
+    import std.typecons : Yes;
+
+    static struct CountingMallocator
+    {
+        enum alignment = Mallocator.alignment;
+        size_t deallocations;
+        void[] allocate(size_t n) { return Mallocator.instance.allocate(n); }
+        bool deallocate(void[] b)
+        {
+            ++deallocations;
+            return Mallocator.instance.deallocate(b);
+        }
+    }
+
+    FreeList!(Mallocator, 16, 16, Yes.adaptive) plain;
+    auto b = plain.allocate(16);
+    assert(b.length == 16);
+    assert(plain.deallocate(b));
+
+    FreeList!(CountingMallocator, 16, 16, Yes.adaptive) fl;
+    b = fl.allocate(16);
+    assert(fl.deallocate(b));
+    // Hits drive the estimated miss probability down.
+    foreach (i; 0 .. 100_000)
+    {
+        b = fl.allocate(16);
+        assert(fl.deallocate(b));
+    }
+    assert(fl.parent.deallocations == 0);
+    // An ineligible request updates the statistics and yanks the spare node.
+    auto large = fl.allocate(32);
+    assert(fl.parent.deallocations == 1);
+    assert(fl.parent.deallocate(large));
 }
 
 /**
