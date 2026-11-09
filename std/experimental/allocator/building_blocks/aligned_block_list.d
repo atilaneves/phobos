@@ -305,9 +305,11 @@ Params:
     Allocator = the allocator which is used to manage each node; it must have a constructor which receives
         `ubyte[]` and it must not have any parent allocators, except for the `NullAllocator`
     ParentAllocator = each node draws memory from the parent allocator; it must support `alignedAllocate`
+        and `deallocate`
     theAlignment = alignment of each block and at the same time length of each node
 */
 struct AlignedBlockList(Allocator, ParentAllocator, ulong theAlignment = (1 << 21))
+if (__traits(hasMember, ParentAllocator, "deallocate"))
 {
     version (StdDdoc)
     {
@@ -464,9 +466,11 @@ Params:
     Allocator = the shared allocator which is used to manage each node; it must have a constructor which receives
         `ubyte[]` and it must not have any parent allocators, except for the `NullAllocator`
     ParentAllocator = each node draws memory from the parent allocator; it must be shared and support `alignedAllocate`
+        and `deallocate`
     theAlignment = alignment of each block and at the same time length of each node
 */
 shared struct SharedAlignedBlockList(Allocator, ParentAllocator, ulong theAlignment = (1 << 21))
+if (__traits(hasMember, ParentAllocator, "deallocate"))
 {
     version (StdDdoc)
     {
@@ -696,4 +700,28 @@ else @system unittest
             assert(a.deallocate(buf[j]));
         }
     }
+}
+
+// Empty nodes are returned to the parent, so the parent must deallocate.
+@system unittest
+{
+    import std.experimental.allocator.building_blocks.region : BorrowedRegion, SharedBorrowedRegion;
+
+    static struct Parent(bool canDeallocate)
+    {
+        enum alignment = platformAlignment;
+        static shared Parent instance;
+    shared:
+        void[] allocate(size_t n) { return null; }
+        void[] alignedAllocate(size_t n, uint a) { return null; }
+        static if (canDeallocate)
+            bool deallocate(void[] b) { return false; }
+    }
+
+    alias Block = BorrowedRegion!(1);
+    alias SharedBlock = SharedBorrowedRegion!(1);
+    static assert(__traits(compiles, AlignedBlockList!(Block, Parent!true, 1 << 16)));
+    static assert(!__traits(compiles, AlignedBlockList!(Block, Parent!false, 1 << 16)));
+    static assert(__traits(compiles, SharedAlignedBlockList!(SharedBlock, Parent!true, 1 << 16)));
+    static assert(!__traits(compiles, SharedAlignedBlockList!(SharedBlock, Parent!false, 1 << 16)));
 }

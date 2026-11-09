@@ -257,8 +257,8 @@ struct TypedAllocator(PrimaryAllocator, Policies...)
     object. Otherwise, returns a `T*` pointing to the created object. In all
     cases, returns `null` if allocation failed.
 
-    Throws: If `T`'s constructor throws, deallocates the allocated memory and
-    propagates the exception.
+    Throws: If `T`'s constructor throws, propagates the exception and deallocates
+    the memory if the selected allocator supports individual deallocation.
     */
     auto make(T, A...)(auto ref A args)
     {
@@ -282,7 +282,9 @@ struct TypedAllocator(PrimaryAllocator, Policies...)
 
     Throws:
     The first two overloads throw only if the used allocator's primitives do.
-    The overloads that involve copy initialization deallocate memory and propagate the exception if the copy operation throws.
+    The overloads that involve copy initialization destroy constructed elements
+    and propagate the exception if copying throws. Storage is individually
+    deallocated only if supported by the selected allocator.
     */
     T[] makeArray(T)(size_t length)
     {
@@ -374,20 +376,23 @@ struct TypedAllocator(PrimaryAllocator, Policies...)
     Destroys and then deallocates (using `allocatorFor!T`) the object pointed
     to by a pointer, the class object referred to by a `class` or `interface`
     reference, or an entire array. It is assumed the respective entities had
-    been allocated with the same allocator.
+    been allocated with the same allocator, which must provide `deallocate`.
     */
     void dispose(T)(T* p)
+    if (__traits(hasMember, typeof(allocatorFor!T()), "deallocate"))
     {
         return .dispose(allocatorFor!T, p);
     }
     /// Ditto
     void dispose(T)(T p)
-    if (is(T == class) || is(T == interface))
+    if ((is(T == class) || is(T == interface))
+        && __traits(hasMember, typeof(allocatorFor!T()), "deallocate"))
     {
         return .dispose(allocatorFor!T, p);
     }
     /// Ditto
     void dispose(T)(T[] array)
+    if (__traits(hasMember, typeof(allocatorFor!(T[])()), "deallocate"))
     {
         return .dispose(allocatorFor!(T[]), array);
     }
@@ -397,10 +402,10 @@ struct TypedAllocator(PrimaryAllocator, Policies...)
 version (WebAssembly) {}
 else @system unittest
 {
-    import std.experimental.allocator.gc_allocator : GCAllocator;
+    import std.experimental.allocator.gc_allocator : GCHeapMallocator;
     import std.experimental.allocator.mallocator : Mallocator;
     import std.experimental.allocator.mmap_allocator : MmapAllocator;
-    alias MyAllocator = TypedAllocator!(GCAllocator,
+    alias MyAllocator = TypedAllocator!(GCHeapMallocator,
         AllocFlag.fixedSize | AllocFlag.threadLocal, Mallocator,
         AllocFlag.fixedSize | AllocFlag.threadLocal
                 | AllocFlag.hasNoIndirections,
@@ -409,7 +414,7 @@ else @system unittest
 
     MyAllocator a;
     auto b = &a.allocatorFor!0();
-    static assert(is(typeof(*b) == shared const(GCAllocator)));
+    static assert(is(typeof(*b) == shared const(GCHeapMallocator)));
     enum f1 = AllocFlag.fixedSize | AllocFlag.threadLocal;
     auto c = &a.allocatorFor!f1();
     static assert(is(typeof(*c) == Mallocator));

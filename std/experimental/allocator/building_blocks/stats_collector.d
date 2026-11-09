@@ -562,28 +562,28 @@ public:
     }
 
     /**
-    Defined whether or not `Allocator.deallocate` is defined. Affects
+    Defined only if `Allocator.deallocate` is defined. Affects
     per instance: `numDeallocate`, `bytesUsed`, and `bytesSlack`.
     Affects per call: `numDeallocate` and `bytesContracted`.
     */
-    static if (!(perCallFlags &
-            (Options.numDeallocate | Options.bytesContracted)))
-        bool deallocate(void[] b)
-        { return deallocateImpl(b); }
-    else
-        bool deallocate(string f = __FILE__, uint n = __LINE__)(void[] b)
-        { return deallocateImpl!(f, n)(b); }
-
-    private bool deallocateImpl(string f = null, uint n = 0)(void[] b)
+    static if (__traits(hasMember, Allocator, "deallocate"))
     {
-        up!"numDeallocate";
-        add!"bytesUsed"(-Signed!size_t(b.length));
-        add!"bytesSlack"(-(this.goodAllocSize(b.length) - b.length));
-        addPerCall!(f, n, "numDeallocate", "bytesContracted")(1, b.length);
-        static if (__traits(hasMember, Allocator, "deallocate"))
-            return parent.deallocate(b);
+        static if (!(perCallFlags &
+                (Options.numDeallocate | Options.bytesContracted)))
+            bool deallocate(void[] b)
+            { return deallocateImpl(b); }
         else
-            return false;
+            bool deallocate(string f = __FILE__, uint n = __LINE__)(void[] b)
+            { return deallocateImpl!(f, n)(b); }
+
+        private bool deallocateImpl(string f = null, uint n = 0)(void[] b)
+        {
+            up!"numDeallocate";
+            add!"bytesUsed"(-Signed!size_t(b.length));
+            add!"bytesSlack"(-(this.goodAllocSize(b.length) - b.length));
+            addPerCall!(f, n, "numDeallocate", "bytesContracted")(1, b.length);
+            return parent.deallocate(b);
+        }
     }
 
     static if (__traits(hasMember, Allocator, "deallocateAll"))
@@ -755,8 +755,8 @@ public:
 @system unittest
 {
     import std.experimental.allocator.building_blocks.free_list : FreeList;
-    import std.experimental.allocator.gc_allocator : GCAllocator;
-    alias Allocator = StatsCollector!(GCAllocator, Options.all, Options.all);
+    import std.experimental.allocator.gc_allocator : GCHeapMallocator;
+    alias Allocator = StatsCollector!(GCHeapMallocator, Options.all, Options.all);
 
     Allocator alloc;
     auto b = alloc.allocate(10);
@@ -807,9 +807,9 @@ public:
      }
 
     import std.experimental.allocator.building_blocks.free_list : FreeList;
-    import std.experimental.allocator.gc_allocator : GCAllocator;
-    test!(StatsCollector!(GCAllocator, Options.all, Options.all));
-    test!(StatsCollector!(FreeList!(GCAllocator, 128), Options.all,
+    import std.experimental.allocator.gc_allocator : GCHeapMallocator;
+    test!(StatsCollector!(GCHeapMallocator, Options.all, Options.all));
+    test!(StatsCollector!(FreeList!(GCHeapMallocator, 128), Options.all,
         Options.all));
 }
 
@@ -830,14 +830,14 @@ public:
         () nothrow @nogc { a.deallocate(b3); }();
     }
     import std.experimental.allocator.building_blocks.free_list : FreeList;
-    import std.experimental.allocator.gc_allocator : GCAllocator;
-    test!(StatsCollector!(GCAllocator, 0, 0));
+    import std.experimental.allocator.gc_allocator : GCHeapMallocator;
+    test!(StatsCollector!(GCHeapMallocator, 0, 0));
 }
 
 @system unittest
 {
-    import std.experimental.allocator.gc_allocator : GCAllocator;
-    StatsCollector!(GCAllocator, 0, 0) a;
+    import std.experimental.allocator.gc_allocator : GCHeapMallocator;
+    StatsCollector!(GCHeapMallocator, 0, 0) a;
 
     // calls std.experimental.allocator.common.goodAllocSize
     assert((() pure nothrow @safe @nogc => a.goodAllocSize(1))());
