@@ -1,0 +1,45 @@
+Region allocators are noncopyable and their deallocation primitives are `@system`
+
+$(REF_ALTTEXT `Region`, Region, std, experimental, allocator, building_blocks, region),
+$(REF_ALTTEXT `BorrowedRegion`, BorrowedRegion, std, experimental, allocator, building_blocks, region),
+$(REF_ALTTEXT `SharedRegion`, SharedRegion, std, experimental, allocator, building_blocks, region),
+and
+$(REF_ALTTEXT `SharedBorrowedRegion`, SharedBorrowedRegion, std, experimental, allocator, building_blocks, region)
+no longer allow copying. Copies duplicate allocation cursors and can return
+overlapping blocks with incompatible types; owning regions also duplicate
+responsibility for releasing their backing storage.
+$(REF_ALTTEXT `InSituRegion`, InSituRegion, std, experimental, allocator, building_blocks, region)
+was already noncopyable.
+
+Code that copied a region must either pass it by `ref` (or by pointer, e.g. use
+`Region!Mallocator*` as a parent allocator), or transfer ownership with
+$(REF move, std, algorithm, mutation). The latter is needed where a region is
+taken by value, such as by composite allocators and their factory functions:
+
+-------
+import std.algorithm.mutation : move;
+import std.experimental.allocator.building_blocks.fallback_allocator : fallbackAllocator;
+import std.experimental.allocator.building_blocks.region : Region;
+import std.experimental.allocator.mallocator : Mallocator;
+
+auto region = Region!Mallocator(1024);
+// fallbackAllocator(region, Mallocator.instance) no longer compiles
+auto a = fallbackAllocator(move(region), Mallocator.instance);
+-------
+
+`deallocateAll()` and `deallocate()` are explicitly `@system` for these types,
+`InSituRegion` and
+$(REF_ALTTEXT `SbrkRegion`, SbrkRegion, std, experimental, allocator, building_blocks, region).
+Both let the region reuse storage that outstanding allocations may still alias,
+and the allocator cannot prove that callers have stopped using those aliases.
+The constructors taking a user-provided `ubyte[] store` are also explicitly
+`@system`, since the caller must ensure that no other region uses the same
+store.
+
+Allocators whose attributes are inferred from their parent's become `@system`
+too when built on these regions. For example, `deallocateAll` of
+$(REF_ALTTEXT `FreeList`, FreeList, std, experimental, allocator, building_blocks, free_list),
+$(REF_ALTTEXT `Segregator`, Segregator, std, experimental, allocator, building_blocks, segregator)
+and
+$(REF_ALTTEXT `Bucketizer`, Bucketizer, std, experimental, allocator, building_blocks, bucketizer)
+can no longer be called from `@safe` code over a region.

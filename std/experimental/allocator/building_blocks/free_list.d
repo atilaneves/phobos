@@ -520,6 +520,7 @@ available for `ContiguousFreeList`.
 struct ContiguousFreeList(ParentAllocator,
      size_t minSize, size_t maxSize = minSize)
 {
+    import std.algorithm.mutation : move;
     import std.experimental.allocator.building_blocks.null_allocator
         : NullAllocator;
     import std.experimental.allocator.building_blocks.stats_collector
@@ -600,7 +601,7 @@ struct ContiguousFreeList(ParentAllocator,
     this(ParentAllocator parent, ubyte[] buffer)
     {
         initialize(buffer);
-        this.parent = SParent(parent);
+        this.parent = SParent(move(parent));
     }
 
     /// ditto
@@ -614,8 +615,8 @@ struct ContiguousFreeList(ParentAllocator,
     static if (stateSize!ParentAllocator)
     this(ParentAllocator parent, size_t bytes)
     {
-        initialize(cast(ubyte[])(parent.allocate(bytes)));
-        this.parent = SParent(parent);
+        this.parent = SParent(move(parent));
+        initialize(cast(ubyte[])(this.parent.parent.allocate(bytes)));
     }
 
     /// ditto
@@ -635,8 +636,8 @@ struct ContiguousFreeList(ParentAllocator,
     {
         static if (maxSize == chooseAtRuntime) fl.max = max;
         static if (minSize == chooseAtRuntime) fl.min = max;
-        initialize(cast(ubyte[])(parent.allocate(bytes)), max);
-        this.parent = SParent(parent);
+        this.parent = SParent(move(parent));
+        initialize(cast(ubyte[])(this.parent.parent.allocate(bytes)), max);
     }
 
     /// ditto
@@ -648,8 +649,6 @@ struct ContiguousFreeList(ParentAllocator,
         static if (maxSize == chooseAtRuntime) fl.max = max;
         fl.min = min;
         initialize(cast(ubyte[])(parent.allocate(bytes)), max);
-        static if (stateSize!ParentAllocator)
-            this.parent = SParent(parent);
     }
 
     /// ditto
@@ -660,9 +659,8 @@ struct ContiguousFreeList(ParentAllocator,
     {
         static if (maxSize == chooseAtRuntime) fl.max = max;
         fl.min = min;
-        initialize(cast(ubyte[])(parent.allocate(bytes)), max);
-        static if (stateSize!ParentAllocator)
-            this.parent = SParent(parent);
+        this.parent = SParent(move(parent));
+        initialize(cast(ubyte[])(this.parent.parent.allocate(bytes)), max);
     }
 
     /**
@@ -847,6 +845,39 @@ struct ContiguousFreeList(ParentAllocator,
     auto a = A(1024);
     const b = a.allocate(100);
     assert(b.length == 100);
+}
+
+// The free list storage must come from the stored parent, not from the
+// constructor parameter that is moved into it.
+@system unittest
+{
+    import std.experimental.allocator.building_blocks.region : InSituRegion;
+    import std.typecons : Ternary;
+
+    alias R = InSituRegion!(1024, 16);
+    auto a = ContiguousFreeList!(R, 16)(R(), 512);
+    assert(a.parent.parent.owns(a.support) == Ternary.yes);
+    assert(a.empty == Ternary.yes);
+    auto b = a.allocate(16);
+    assert(b.length == 16);
+    assert(a.owns(b) == Ternary.yes);
+    assert(a.parent.parent.owns(b) == Ternary.yes);
+}
+
+// Constructors accept noncopyable parent allocators.
+@system nothrow @nogc unittest
+{
+    import std.experimental.allocator.building_blocks.region : Region;
+    import std.experimental.allocator.mallocator : Mallocator;
+    import std.typecons : Ternary;
+
+    alias R = Region!Mallocator;
+    auto a = ContiguousFreeList!(R, 16)(R(4096), 1024);
+    assert(a.empty == Ternary.yes);
+    assert(a.allocate(16).length == 16);
+    auto b = ContiguousFreeList!(R, 0, unbounded)(R(4096), 1024, 16);
+    assert(b.empty == Ternary.yes);
+    assert(b.allocate(16).length == 16);
 }
 
 /**

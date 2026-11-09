@@ -29,7 +29,8 @@ the store and the limits. One allocation entails rounding up the allocation
 size for alignment purposes, bumping the current pointer, and comparing it
 against the limit.
 
-`Region` deallocates the chunk of memory during destruction.
+`Region` deallocates the chunk of memory during destruction. It is noncopyable:
+copying would duplicate ownership of the backing storage and allocation state.
 
 The `minAlign` parameter establishes alignment. If $(D minAlign > 1), the
 sizes of all allocation requests are rounded up to a multiple of `minAlign`.
@@ -82,8 +83,11 @@ struct Region(ParentAllocator,
         n = Bytes to allocate using `ParentAllocator`. If `parent.allocate(n)`
         returns `null`, the region will be initialized as empty (correctly
         initialized but unable to allocate).
-        */
-    this(ubyte[] store) pure nothrow @nogc
+
+    The `store` constructor is `@system` because the caller must ensure that
+    no other allocator or reference uses `store` while the region is alive.
+    */
+    this(ubyte[] store) pure nothrow @system @nogc
     {
         _impl = store;
     }
@@ -99,14 +103,12 @@ struct Region(ParentAllocator,
     static if (stateSize!ParentAllocator)
     this(ParentAllocator parent, size_t n)
     {
-        this.parent = parent;
-        this(cast(ubyte[]) (parent.allocate(n.roundUpToAlignment(alignment))));
+        import std.algorithm.mutation : move;
+        this.parent = move(parent);
+        this(cast(ubyte[]) (this.parent.allocate(n.roundUpToAlignment(alignment))));
     }
 
-    /*
-    TODO: The postblit of `BasicRegion` should be disabled because such objects
-    should not be copied around naively.
-    */
+    @disable this(this);
 
     /**
     If `ParentAllocator` defines `deallocate`, the region defines a destructor
@@ -187,8 +189,12 @@ struct Region(ParentAllocator,
     Params:
         b = Block previously obtained by a call to `allocate` against this
         allocator (`null` is allowed).
+
+    This operation is `@system` because the storage of a deallocated block is
+    reused by later allocations; outstanding aliases to it must no longer be
+    used.
     */
-    bool deallocate(void[] b) pure nothrow @nogc
+    bool deallocate(void[] b) pure nothrow @system @nogc
     {
         return _impl.deallocate(b);
     }
@@ -196,8 +202,11 @@ struct Region(ParentAllocator,
     /**
     Deallocates all memory allocated by this region, which can be subsequently
     reused for new allocations.
+
+    This operation is `@system` because it invalidates all previously allocated
+    blocks; outstanding aliases to those blocks must no longer be used.
     */
-    bool deallocateAll() pure nothrow @nogc
+    bool deallocateAll() pure nothrow @system @nogc
     {
         return _impl.deallocateAll;
     }
@@ -338,6 +347,23 @@ version (StdUnittest)
     testAllocator!(() => SharedRegion!(Mallocator, Mallocator.alignment, Yes.growDownwards)(1024 * 64));
 }
 
+// Region constructors accept noncopyable parent allocators.
+@system nothrow @nogc unittest
+{
+    import std.experimental.allocator.mallocator : Mallocator;
+
+    alias R = Region!Mallocator;
+    // The constructor moves the temporary parent into its member internally.
+    auto a = Region!R(R(4096), 1024);
+    assert(a.allocate(64).length == 64);
+    align(BorrowedRegion!().alignment) ubyte[1024] buf;
+    auto c = Region!(BorrowedRegion!())(BorrowedRegion!()(buf[]), 512);
+    auto block = c.allocate(64);
+    assert(block.length == 64);
+    assert(block.ptr == buf.ptr);
+    assert(c.parent.allocate(64).ptr == buf.ptr + 512);
+}
+
 @system nothrow @nogc unittest
 {
     import std.experimental.allocator.mallocator : Mallocator;
@@ -357,6 +383,9 @@ A `BorrowedRegion` allocates directly from a user-provided block of memory.
 Unlike a `Region`, a `BorrowedRegion` does not own the memory it allocates from
 and will not deallocate that memory upon destruction. Instead, it is the user's
 responsibility to ensure that the memory is properly disposed of.
+
+A `BorrowedRegion` is noncopyable: independent copies of its allocation cursor
+could return overlapping blocks with incompatible types.
 
 In all other respects, a `BorrowedRegion` behaves exactly like a `Region`.
 */
@@ -385,8 +414,11 @@ struct BorrowedRegion(uint minAlign = platformAlignment,
 
     Params:
         store = User-provided store backing up the region.
+
+    The `store` constructor is `@system` because the caller must ensure that
+    no other allocator or reference uses `store` while the region is alive.
     */
-    this(ubyte[] store) pure nothrow @nogc
+    this(ubyte[] store) pure nothrow @system @nogc
     {
         _begin = store.ptr;
         _end = store.ptr + store.length;
@@ -396,10 +428,7 @@ struct BorrowedRegion(uint minAlign = platformAlignment,
             _current = roundedBegin();
     }
 
-    /*
-    TODO: The postblit of `BorrowedRegion` should be disabled because such objects
-    should not be copied around naively.
-    */
+    @disable this(this);
 
     /**
     Rounds the given size to a multiple of the `alignment`
@@ -549,8 +578,12 @@ struct BorrowedRegion(uint minAlign = platformAlignment,
     Params:
         b = Block previously obtained by a call to `allocate` against this
         allocator (`null` is allowed).
+
+    This operation is `@system` because the storage of a deallocated block is
+    reused by later allocations; outstanding aliases to it must no longer be
+    used.
     */
-    bool deallocate(void[] b) pure nothrow @nogc
+    bool deallocate(void[] b) pure nothrow @system @nogc
     {
         assert(owns(b) == Ternary.yes || b.ptr is null);
         auto rounded = goodAllocSize(b.length);
@@ -577,8 +610,11 @@ struct BorrowedRegion(uint minAlign = platformAlignment,
     /**
     Deallocates all memory allocated by this region, which can be subsequently
     reused for new allocations.
+
+    This operation is `@system` because it invalidates all previously allocated
+    blocks; outstanding aliases to those blocks must no longer be used.
     */
-    bool deallocateAll() pure nothrow @nogc
+    bool deallocateAll() pure nothrow @system @nogc
     {
         static if (growDownwards)
         {
@@ -629,6 +665,74 @@ struct BorrowedRegion(uint minAlign = platformAlignment,
         {
             return _end - _current;
         }
+    }
+}
+
+@safe unittest
+{
+    import std.experimental.allocator : makeArray;
+    import std.experimental.allocator.mallocator : Mallocator;
+    import std.meta : AliasSeq;
+
+    static void testRegion(R)() @safe
+    {
+        enum allocationSize = 8;
+        static assert(!__traits(isCopyable, R));
+        // Preparing the allocation may require @system; using a live alias does not.
+        static assert(__traits(compiles,
+            (ref R region) @system
+            {
+                auto allocation = region.makeArray!ubyte(allocationSize);
+                auto aliasToAllocation = allocation;
+                () @safe
+                {
+                    aliasToAllocation[] = 1;
+                }();
+            }));
+        // @safe code cannot deallocate storage and then use a retained alias.
+        static assert(!__traits(compiles,
+            (ref R region) @system
+            {
+                auto allocation = region.makeArray!ubyte(allocationSize);
+                auto aliasToAllocation = allocation;
+                () @safe
+                {
+                    region.deallocateAll();
+                    aliasToAllocation[] = 1;
+                }();
+            }));
+        // Rolling back the last allocation also lets its storage be reused.
+        static assert(!__traits(compiles,
+            (ref R region) @system
+            {
+                auto allocation = region.makeArray!ubyte(allocationSize);
+                auto aliasToAllocation = allocation;
+                () @safe
+                {
+                    region.deallocate(allocation);
+                    aliasToAllocation[] = 1;
+                }();
+            }));
+        // @safe code cannot place two regions over the same store.
+        static if (__traits(compiles, (ubyte[] store) @system { auto r = R(store); }))
+            static assert(!__traits(compiles,
+                (ubyte[] store) @safe { auto r = R(store); }));
+    }
+
+    enum minAlign = 1;
+    enum storeSize = 64;
+    static foreach (R; AliasSeq!(
+        BorrowedRegion!minAlign,
+        BorrowedRegion!(minAlign, Yes.growDownwards),
+        Region!(Mallocator, minAlign),
+        Region!(Mallocator, minAlign, Yes.growDownwards),
+        SharedBorrowedRegion!minAlign,
+        SharedBorrowedRegion!(minAlign, Yes.growDownwards),
+        SharedRegion!(Mallocator, minAlign),
+        SharedRegion!(Mallocator, minAlign, Yes.growDownwards),
+        InSituRegion!(storeSize, minAlign)))
+    {
+        testRegion!R();
     }
 }
 
@@ -779,8 +883,12 @@ struct InSituRegion(size_t size, size_t minAlign = platformAlignment)
     Params:
         b = Block previously obtained by a call to `allocate` against this
         allocator (`null` is allowed).
+
+    This operation is `@system` because the storage of a deallocated block is
+    reused by later allocations; outstanding aliases to it must no longer be
+    used.
     */
-    bool deallocate(void[] b)
+    bool deallocate(void[] b) @system
     {
         if (!_impl._current) return b is null;
         return _impl.deallocate(b);
@@ -809,8 +917,11 @@ struct InSituRegion(size_t size, size_t minAlign = platformAlignment)
 
     /**
     Deallocates all memory allocated with this allocator.
+
+    This operation is `@system` because it invalidates all previously allocated
+    blocks; outstanding aliases to those blocks must no longer be used.
     */
-    bool deallocateAll()
+    bool deallocateAll() @system
     {
         // We don't care to lazily init the region
         return _impl.deallocateAll;
@@ -1074,8 +1185,11 @@ version (Posix) struct SbrkRegion(uint minAlign = platformAlignment)
     with negative offsets). OSX does not accept such. In addition the argument
     must be the last block allocated.
 
+    This operation is `@system` because the storage of a deallocated block is
+    reused by later allocations; outstanding aliases to it must no longer be
+    used.
     */
-    bool deallocate(void[] b) shared nothrow @nogc
+    bool deallocate(void[] b) shared nothrow @system @nogc
     {
         // Take alignment rounding into account
         const rounded = goodAllocSize(b.length);
@@ -1094,8 +1208,11 @@ version (Posix) struct SbrkRegion(uint minAlign = platformAlignment)
     The `deallocateAll` method only works (and returns `true`) on systems
     that support reducing the  break address (i.e. accept calls to `sbrk`
     with negative offsets). OSX does not accept such.
+
+    This operation is `@system` because it invalidates all previously allocated
+    blocks; outstanding aliases to those blocks must no longer be used.
     */
-    nothrow @nogc
+    nothrow @system @nogc
     bool deallocateAll() shared
     {
         pthread_mutex_lock(cast(pthread_mutex_t*) &sbrkMutex) == 0 || assert(0);
@@ -1170,6 +1287,9 @@ version (Posix) @system nothrow @nogc unittest
 /**
 The threadsafe version of the `Region` allocator.
 Allocations and deallocations are lock-free based using $(REF cas, core,atomic).
+`SharedRegion` is noncopyable because copying would duplicate responsibility for
+freeing its backing storage and create independent allocation cursors over the
+same memory.
 */
 shared struct SharedRegion(ParentAllocator,
     uint minAlign = platformAlignment,
@@ -1194,6 +1314,8 @@ shared struct SharedRegion(ParentAllocator,
     {
         alias parent = ParentAllocator.instance;
     }
+    @disable this(this);
+
     private shared SharedBorrowedRegion!(minAlign, growDownwards) _impl;
 
     private void* roundedBegin() const pure nothrow @trusted @nogc
@@ -1217,8 +1339,11 @@ shared struct SharedRegion(ParentAllocator,
         n = Bytes to allocate using `ParentAllocator`. If `parent.allocate(n)`
         returns `null`, the region will be initialized as empty (correctly
         initialized but unable to allocate).
+
+    The `store` constructor is `@system` because the caller must ensure that
+    no other allocator or reference uses `store` while the region is alive.
     */
-    this(ubyte[] store) pure nothrow @nogc
+    this(ubyte[] store) pure nothrow @system @nogc
     {
         _impl = store;
     }
@@ -1266,8 +1391,12 @@ shared struct SharedRegion(ParentAllocator,
     Params:
         b = Block previously obtained by a call to `allocate` against this
         allocator (`null` is allowed).
+
+    This operation is `@system` because the storage of a deallocated block is
+    reused by later allocations; outstanding aliases to it must no longer be
+    used.
     */
-    bool deallocate(void[] b) pure nothrow @nogc
+    bool deallocate(void[] b) pure nothrow @system @nogc
     {
         return _impl.deallocate(b);
     }
@@ -1275,8 +1404,11 @@ shared struct SharedRegion(ParentAllocator,
     /**
     Deallocates all memory allocated by this region, which can be subsequently
     reused for new allocations.
+
+    This operation is `@system` because it invalidates all previously allocated
+    blocks; outstanding aliases to those blocks must no longer be used.
     */
-    bool deallocateAll() pure nothrow @nogc
+    bool deallocateAll() pure nothrow @system @nogc
     {
         return _impl.deallocateAll;
     }
@@ -1471,6 +1603,9 @@ allocates from and will not deallocate that memory upon destruction. Instead,
 it is the user's responsibility to ensure that the memory is properly disposed
 of.
 
+A `SharedBorrowedRegion` is noncopyable: independent copies of its allocation
+cursor could return overlapping blocks with incompatible types.
+
 In all other respects, a `SharedBorrowedRegion` behaves exactly like a `SharedRegion`.
 */
 shared struct SharedBorrowedRegion(uint minAlign = platformAlignment,
@@ -1498,8 +1633,11 @@ shared struct SharedBorrowedRegion(uint minAlign = platformAlignment,
 
     Params:
         store = User-provided store backing up the region. Must not be aliased.
+
+    The `store` constructor is `@system` because the caller must ensure that
+    no other allocator or reference uses `store` while the region is alive.
     */
-    this(ubyte[] store) shared pure nothrow @nogc
+    this(ubyte[] store) shared pure nothrow @system @nogc
     {
         _begin = cast(typeof(_begin)) store.ptr;
         _end = cast(typeof(_end)) (store.ptr + store.length);
@@ -1509,10 +1647,7 @@ shared struct SharedBorrowedRegion(uint minAlign = platformAlignment,
             _current = cast(typeof(_current)) roundedBegin();
     }
 
-    /*
-    TODO: The postblit of `SharedBorrowedRegion` should be disabled because
-    such objects should not be copied around naively.
-    */
+    @disable this(this);
 
     /**
     Rounds the given size to a multiple of the `alignment`
@@ -1635,8 +1770,12 @@ shared struct SharedBorrowedRegion(uint minAlign = platformAlignment,
     Params:
         b = Block previously obtained by a call to `allocate` against this
         allocator (`null` is allowed).
+
+    This operation is `@system` because the storage of a deallocated block is
+    reused by later allocations; outstanding aliases to it must no longer be
+    used.
     */
-    bool deallocate(void[] b) shared pure nothrow @nogc
+    bool deallocate(void[] b) shared pure nothrow @system @nogc
     {
         import core.atomic : cas, atomicLoad;
 
@@ -1664,8 +1803,11 @@ shared struct SharedBorrowedRegion(uint minAlign = platformAlignment,
     /**
     Deallocates all memory allocated by this region, which can be subsequently
     reused for new allocations.
+
+    This operation is `@system` because it invalidates all previously allocated
+    blocks; outstanding aliases to those blocks must no longer be used.
     */
-    bool deallocateAll() shared pure nothrow @nogc
+    bool deallocateAll() shared pure nothrow @system @nogc
     {
         import core.atomic : atomicStore;
         static if (growDownwards)
