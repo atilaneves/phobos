@@ -12,6 +12,7 @@ import std.typecons : Flag, Yes, No;
 // Common implementation for shared and non-shared versions of the BitmappedBlock
 private mixin template BitmappedBlockImpl(bool isShared, bool multiBlock)
 {
+    import std.algorithm.mutation : move;
     import std.conv : text;
     import std.typecons : Ternary;
     import std.typecons : tuple, Tuple;
@@ -167,7 +168,6 @@ private mixin template BitmappedBlockImpl(bool isShared, bool multiBlock)
     static if (!is(ParentAllocator == NullAllocator) && stateSize!ParentAllocator)
     this(ParentAllocator parent, size_t capacity)
     {
-        import std.algorithm.mutation : move;
         this.parent = move(parent);
         size_t toAllocate = totalAllocation(capacity);
         auto data = cast(ubyte[])(this.parent.allocate(toAllocate));
@@ -188,7 +188,6 @@ private mixin template BitmappedBlockImpl(bool isShared, bool multiBlock)
         stateSize!ParentAllocator)
     this(ParentAllocator parent, size_t capacity, uint blockSize)
     {
-        import std.algorithm.mutation : move;
         this._blockSize = blockSize;
         this(move(parent), capacity);
     }
@@ -2168,6 +2167,7 @@ struct BitmappedBlockWithInternalPointers(
     size_t theBlockSize, uint theAlignment = platformAlignment,
     ParentAllocator = NullAllocator)
 {
+    import std.algorithm.mutation : move;
     import std.conv : text;
     import std.typecons : Ternary;
 
@@ -2200,7 +2200,6 @@ struct BitmappedBlockWithInternalPointers(
     static if (stateSize!ParentAllocator)
     this(ParentAllocator parent, ubyte[] data)
     {
-        import std.algorithm.mutation : move;
         _heap = BitmappedBlock!(theBlockSize, theAlignment, ParentAllocator)(data);
         _heap.parent = move(parent);
     }
@@ -2218,7 +2217,6 @@ struct BitmappedBlockWithInternalPointers(
     static if (!is(ParentAllocator == NullAllocator) && stateSize!ParentAllocator)
     this(ParentAllocator parent, size_t capacity)
     {
-        import std.algorithm.mutation : move;
         // Add room for the _allocStart vector
         _heap = BitmappedBlock!(theBlockSize, theAlignment, ParentAllocator)
             (move(parent), capacity + capacity.divideRoundUp(64));
@@ -2449,6 +2447,28 @@ struct BitmappedBlockWithInternalPointers(
     import std.experimental.allocator.building_blocks.region : Region;
     auto r = Region!Mallocator(1024 * 1024);
     auto h = BitmappedBlockWithInternalPointers!(4096, 8, Region!Mallocator*)(&r, 4096 * 1024);
+}
+
+// Constructors accept noncopyable parent allocators. Allocation checks verify
+// that moving the parent leaves each allocator with usable backing storage.
+@system nothrow @nogc unittest
+{
+    import std.algorithm.mutation : move;
+    import std.experimental.allocator.mallocator : Mallocator;
+    import std.experimental.allocator.building_blocks.region : Region;
+
+    alias R = Region!Mallocator;
+    // The constructor moves the temporary parent into its member internally.
+    auto a = BitmappedBlock!(64, R.alignment, R)(R(4096), 1024);
+    assert(a.allocate(64).length == 64);
+    auto b = BitmappedBlock!(chooseAtRuntime, R.alignment, R)(R(4096), 1024, 64);
+    assert(b.allocate(64).length == 64);
+    auto c = BitmappedBlockWithInternalPointers!(64, R.alignment, R)(R(4096), 1024);
+    assert(c.allocate(64).length == 64);
+    auto parent = R(4096);
+    auto data = cast(ubyte[]) parent.allocate(1024);
+    auto d = BitmappedBlockWithInternalPointers!(64, R.alignment, R)(move(parent), data);
+    assert(d.allocate(64).length == 64);
 }
 
 /**
