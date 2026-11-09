@@ -1851,10 +1851,13 @@ if (isInputRange!R && !isInfinite!R)
         // value from the frame.
         void bailout()
         {
-            foreach (j; 0 .. i)
+            static if (__traits(needsDestruction, T))
             {
-                auto p = () @trusted { return cast(Unqual!T*) &result[j]; }();
-                destroy(*p);
+                foreach (j; 0 .. i)
+                {
+                    auto p = () @trusted { return cast(Unqual!T*) &result[j]; }();
+                    destroy(*p);
+                }
             }
 
             static if (__traits(hasMember, Allocator, "deallocate"))
@@ -1898,9 +1901,12 @@ if (isInputRange!R && !isInfinite!R)
         size_t initialized = 0;
         void bailout()
         {
-            foreach (i; 0 .. initialized)
+            static if (__traits(needsDestruction, T))
             {
-                destroy(result[i]);
+                foreach (i; 0 .. initialized)
+                {
+                    destroy(result[i]);
+                }
             }
 
             static if (__traits(hasMember, Allocator, "deallocate"))
@@ -4086,6 +4092,40 @@ unittest
         assertThrown(alloc.makeArray!Element(ThrowingRange!forward(source[])));
         assert(destroyed == 1);
         assert(alloc.deallocations == 1);
+    }}
+}
+
+// A failed makeArray must not finalize class objects still owned by the caller.
+@system unittest
+{
+    import std.exception : assertThrown;
+    import std.experimental.allocator.mallocator : Mallocator;
+
+    static size_t finalized;
+    static class C
+    {
+        ~this() { ++finalized; }
+    }
+
+    struct ThrowingRange(bool forward)
+    {
+        C[] values;
+        bool empty() { return values.length == 0; }
+        C front() { return values[0]; }
+        void popFront() { throw new Exception("range advance failed"); }
+        static if (forward)
+        {
+            ThrowingRange save() { return this; }
+            size_t length() { return values.length; }
+        }
+    }
+
+    C[2] objects = [new C, new C];
+    static foreach (forward; [false, true])
+    {{
+        finalized = 0;
+        assertThrown(Mallocator.instance.makeArray!C(ThrowingRange!forward(objects[])));
+        assert(finalized == 0);
     }}
 }
 
