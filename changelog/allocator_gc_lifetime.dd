@@ -14,6 +14,25 @@ initialization fails, releasing storage individually only when supported.
 The fixed dynamic allocator interfaces continue to return `false` when the
 underlying allocator does not provide individual deallocation.
 
+The default `theAllocator` and `processAllocator` wrap `GCAllocator`, so their
+`deallocate` now returns `false` and `theAllocator.dispose` destroys the object
+but no longer frees its storage; the collector reclaims it.
+
+Wrappers forward `deallocate` only when their parent provides it. Over
+`GCAllocator`, `AffixAllocator`, `Quantizer` and `StatsCollector` no longer
+provide `deallocate`, and neither they nor `TypedAllocator` support `dispose`
+any more; such calls no longer compile. `Segregator` provides `deallocate`
+when either of its allocators does, and returns `false` for blocks from the
+side that cannot deallocate; a `Segregator` with `GCAllocator` on both sides
+has no `deallocate`. Use `GCHeapMallocator` as the parent to keep explicit
+release.
+
+`expandArray` and `shrinkArray` with `GCAllocator` no longer use `GC.realloc`.
+Expansion tries `GCAllocator.expand` in place and otherwise allocates a new
+block and copies, leaving the old block to the collector. Shrinking with an
+allocator that provides neither `deallocate` nor `reallocate` slices the array
+in place instead of copying it to a smaller block.
+
 Generic reallocation in `std.experimental.allocator.common` still supports
 allocators without individual deallocation by allocating a replacement and
 retaining the old storage for the allocator's lifetime policy to handle.
