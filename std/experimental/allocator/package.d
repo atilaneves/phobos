@@ -1845,9 +1845,10 @@ if (isInputRange!R && !isInfinite!R)
         auto result = () @trusted { return cast(T[]) m; } ();
 
         size_t i = 0;
-        // Keep `i` in the frame through a nested function so the cleanup sees
-        // the current count; with `-O -release`, DMD reads a stale value in a
-        // plain `scope (failure)` block.
+        // Read `i` through a nested function so the cleanup sees the current
+        // count: with bounds checks off, DMD `-O` can keep the counter only in
+        // a register and a plain `scope (failure)` block then reads a stale
+        // value from the frame.
         void bailout()
         {
             foreach (j; 0 .. i)
