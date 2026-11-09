@@ -98,6 +98,7 @@ information is available in client code at deallocation time.)
 */
 struct KRRegion(ParentAllocator = NullAllocator)
 {
+    import std.algorithm.mutation : move;
     import std.experimental.allocator.common : stateSize, alignedAt;
     import std.typecons : Ternary;
 
@@ -357,8 +358,8 @@ struct KRRegion(ParentAllocator = NullAllocator)
     this(ParentAllocator parent, size_t n)
     {
         assert(n > Node.sizeof);
-        this.parent = parent;
-        this(cast(ubyte[])(parent.allocate(n)));
+        this.parent = move(parent);
+        this(cast(ubyte[])(this.parent.allocate(n)));
     }
 
     /// Ditto
@@ -641,6 +642,18 @@ struct KRRegion(ParentAllocator = NullAllocator)
 
         return Ternary(root && root.size == payload.length);
     }
+}
+
+// The constructor accepts noncopyable parent allocators.
+@system nothrow @nogc unittest
+{
+    import std.experimental.allocator.building_blocks.region : Region;
+    import std.experimental.allocator.mallocator : Mallocator;
+
+    alias R = Region!Mallocator;
+    // The constructor moves the temporary parent into its member internally.
+    auto a = KRRegion!R(R(4096), 1024);
+    assert(a.allocate(64).length == 64);
 }
 
 /**
