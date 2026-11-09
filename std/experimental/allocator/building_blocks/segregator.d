@@ -80,8 +80,10 @@ struct Segregator(size_t threshold, SmallAllocator, LargeAllocator)
         */
         Ternary owns(void[] b);
         /**
-        This function is defined only if both allocators define it, and forwards
-        appropriately depending on `b.length`.
+        This function is defined if at least one of the allocators defines it,
+        and forwards appropriately depending on `b.length`. If the allocator
+        selected by `b.length` does not define `deallocate`, the call returns
+        `false`.
         */
         bool deallocate(void[] b);
         /**
@@ -253,12 +255,23 @@ struct Segregator(size_t threshold, SmallAllocator, LargeAllocator)
         }
 
         static if (__traits(hasMember, SmallAllocator, "deallocate")
-                && __traits(hasMember, LargeAllocator, "deallocate"))
+                || __traits(hasMember, LargeAllocator, "deallocate"))
         bool deallocate(void[] data)
         {
-            return data.length <= threshold
-                ? _small.deallocate(data)
-                : _large.deallocate(data);
+            if (data.length <= threshold)
+            {
+                static if (__traits(hasMember, SmallAllocator, "deallocate"))
+                    return _small.deallocate(data);
+                else
+                    return false;
+            }
+            else
+            {
+                static if (__traits(hasMember, LargeAllocator, "deallocate"))
+                    return _large.deallocate(data);
+                else
+                    return false;
+            }
         }
 
         static if (__traits(hasMember, SmallAllocator, "deallocateAll")
@@ -517,4 +530,30 @@ if (Args.length > 3)
     assert(b.length == 100);
     assert((() nothrow @safe @nogc => a.empty)() == Ternary.no);
     assert((() nothrow @nogc => a.deallocate(b))());
+}
+
+// Deallocation is routed by size even when only one side supports it.
+@system unittest
+{
+    import std.experimental.allocator.building_blocks.free_list : FreeList;
+    import std.experimental.allocator.gc_allocator : GCAllocator;
+    import std.experimental.allocator.mallocator : Mallocator;
+
+    static assert(!__traits(hasMember, GCAllocator, "deallocate"));
+    alias Small = FreeList!(Mallocator, 0, 128);
+
+    Segregator!(128, Small, GCAllocator) a;
+    auto small = a.allocate(64);
+    assert(small.length == 64);
+    assert(a.deallocate(small));
+    assert(a.allocate(64).ptr is small.ptr);
+    auto large = a.allocate(256);
+    assert(large.length == 256);
+    assert(!a.deallocate(large));
+
+    alias b = Segregator!(128, GCAllocator, Mallocator).instance;
+    small = b.allocate(64);
+    assert(!b.deallocate(small));
+    large = b.allocate(256);
+    assert(b.deallocate(large));
 }

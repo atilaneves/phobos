@@ -3970,7 +3970,7 @@ unittest
 
     auto alloc2 = allocatorObject(A.instance);
     b = alloc2.allocate(101);
-    assert(!alloc2.deallocate(b));
+    assert(alloc2.deallocate(b));
 }
 
 // Allocation-only allocators can construct values and unwind partial arrays.
