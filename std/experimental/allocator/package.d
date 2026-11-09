@@ -1893,6 +1893,8 @@ if (isInputRange!R && !isInfinite!R)
     }
     else
     {
+        if (range.empty) return null;
+
         // Estimated size
         size_t estimated = 8;
         auto m = alloc.allocate(T.sizeof * estimated);
@@ -1942,15 +1944,20 @@ if (isInputRange!R && !isInfinite!R)
             ++initialized;
         }
 
-        if (initialized < estimated)
+        // Try to shrink memory, no harm if not possible. Without `deallocate`
+        // or `reallocate`, shrinking would only allocate a new block and copy.
+        static if (__traits(hasMember, Allocator, "deallocate")
+            || __traits(hasMember, Allocator, "reallocate"))
         {
-            // Try to shrink memory, no harm if not possible
-            static if (hasPurePostblit!T)
-                auto success = () @trusted { return alloc.reallocate(m, T.sizeof * initialized); } ();
-            else
-                auto success = alloc.reallocate(m, T.sizeof * initialized);
-            if (success)
-                result = () @trusted { return cast(T[]) m; } ();
+            if (initialized < estimated)
+            {
+                static if (hasPurePostblit!T)
+                    auto success = () @trusted { return alloc.reallocate(m, T.sizeof * initialized); } ();
+                else
+                    auto success = alloc.reallocate(m, T.sizeof * initialized);
+                if (success)
+                    result = () @trusted { return cast(T[]) m; } ();
+            }
         }
 
         return result[0 .. initialized];
@@ -2348,7 +2355,9 @@ Shrinks an array by `delta` elements.
 
 If $(D array.length < delta), does nothing and returns `false`. Otherwise,
 destroys the last $(D array.length - delta) elements in the array and then
-reallocates the array's buffer. If reallocation fails, fills the array with
+reallocates the array's buffer. If `alloc` supports neither `deallocate` nor
+`reallocate`, the array is sliced in place instead, because reallocating would
+only allocate and copy. If reallocation fails, fills the array with
 default-initialized data.
 
 Params:
@@ -2395,15 +2404,26 @@ bool shrinkArray(T, Allocator)(auto ref Allocator alloc,
         return true;
     }
 
-    void[] buf = array;
-    if (!alloc.reallocate(buf, buf.length - T.sizeof * delta))
+    static if (!__traits(hasMember, Allocator, "deallocate")
+        && !__traits(hasMember, Allocator, "reallocate"))
     {
-        // urgh, at least fill back with default
-        array[$ - delta .. $].uninitializedFillDefault;
-        return false;
+        // Reallocating would only allocate a new block and copy; the old one
+        // can't be freed individually.
+        array = array[0 .. $ - delta];
+        return true;
     }
-    array = cast(T[]) buf;
-    return true;
+    else
+    {
+        void[] buf = array;
+        if (!alloc.reallocate(buf, buf.length - T.sizeof * delta))
+        {
+            // urgh, at least fill back with default
+            array[$ - delta .. $].uninitializedFillDefault;
+            return false;
+        }
+        array = cast(T[]) buf;
+        return true;
+    }
 }
 
 ///
@@ -4095,6 +4115,53 @@ unittest
         assert(destroyed == 1);
         assert(alloc.deallocations == 1);
     }}
+}
+
+// Shrinking with an allocator that can't free individual blocks slices in
+// place instead of allocating a smaller copy.
+@system unittest
+{
+    import std.experimental.allocator.gc_allocator : GCAllocator;
+
+    static struct CountingAllocator
+    {
+        enum alignment = GCAllocator.alignment;
+        size_t allocations;
+        void[] allocate(size_t n)
+        {
+            ++allocations;
+            return GCAllocator.instance.allocate(n);
+        }
+        bool expand(ref void[] b, size_t delta)
+        {
+            return GCAllocator.instance.expand(b, delta);
+        }
+    }
+    static assert(!__traits(hasMember, CountingAllocator, "deallocate"));
+    static assert(!__traits(hasMember, CountingAllocator, "reallocate"));
+
+    static struct Input
+    {
+        int[] values;
+        bool empty() { return values.length == 0; }
+        int front() { return values[0]; }
+        void popFront() { values = values[1 .. $]; }
+    }
+
+    CountingAllocator alloc;
+    assert(alloc.makeArray!int(Input(null)) is null);
+    assert(alloc.allocations == 0);
+    auto fromInput = alloc.makeArray!int(Input([1, 2, 3]));
+    assert(fromInput == [1, 2, 3]);
+    assert(alloc.allocations == 1);
+
+    auto array = alloc.makeArray!int(100, 7);
+    auto p = array.ptr;
+    alloc.allocations = 0;
+    assert(alloc.shrinkArray(array, 90));
+    assert(array.length == 10 && array.ptr is p);
+    assert(array == [7, 7, 7, 7, 7, 7, 7, 7, 7, 7]);
+    assert(alloc.allocations == 0);
 }
 
 // A failed makeArray must not finalize class objects still owned by the caller.
